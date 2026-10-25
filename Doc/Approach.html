@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Architectural & Engineering Approach</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; margin: 0; padding: 40px 20px; }
+    .container { max-width: 1100px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid #8b5cf6; padding-bottom: 12px; margin-top: 0; }
+    h2 { color: #6b21a8; font-size: 20px; margin-top: 32px; border-left: 4px solid #8b5cf6; padding-left: 10px; }
+    h3 { color: #334155; font-size: 16px; margin-top: 20px; }
+    .card { background: #fdf4ff; border: 1px solid #f0abfc; border-radius: 8px; padding: 18px; margin-bottom: 18px; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+    ul, ol { padding-left: 24px; }
+    li { margin-bottom: 8px; }
+    .arch-box { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 16px; margin: 16px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - System Architecture & Engineering Approach</h1>
+    <p>This document explains the rationale, architectural patterns, algorithmic strategies, and engineering trade-offs made during the design and development of the StyleBook enterprise salon and grooming platform.</p>
+
+    <h2>1. Microservices Decomposition & API Gateway Pattern</h2>
+    <div class="card">
+      <p><strong>Rationale:</strong> Salon platforms have asymmetric operational workloads. Search and discovery (exploring salons in Ramanathapuram, filtering localities like Puduvalasai and Panaikulam) represents the bulk of read traffic, while appointment booking, OTP validation, and governance enforcement represent mission-critical transactional traffic. Decomposing into domain-driven microservices provides:</p>
+      <ul>
+        <li><strong>Independent Scalability:</strong> The MasterData and Salon read services scale horizontally during peak promotional traffic without adding load to transactional databases.</li>
+        <li><strong>Unified Gateway via Ocelot:</strong> Protects internal microservice network topology, handles centralized CORS, rate-limiting, and provides single-point entry on Port 5000.</li>
+        <li><strong>Resilience & Fault Isolation:</strong> A temporary anomaly in the marketing service does not disrupt booking or OTP check-in.</li>
+      </ul>
+    </div>
+
+    <h2>2. Search-to-Booking Relational Integrity Matrix</h2>
+    <div class="arch-box">
+      <p>To eliminate booking failures (such as a customer booking a stylist for a service they cannot perform, or at a branch where they are not stationed), StyleBook enforces a strict three-dimensional relational matrix across Services, Branches, and Stylists:</p>
+      <pre><code>RELATIONAL DEPENDENCY MATRIX:
+1. Search Service (S)     ──> Filter Branches offering (S) ──> Filter Stylists certified for (S)
+2. Choose Branch (B)      ──> Filter Services offered at (B) ──> Filter Stylists assigned to (B)
+3. Choose Stylist (T)     ──> Filter Services certified for (T) ──> Filter Branches assigned to (T)
+4. Doorstep Mode          ──> Service must support Doorstep AND Stylist must support Doorstep</code></pre>
+      <ul>
+        <li><strong>Branch Entry Point:</strong> When customer picks a branch, the UI restricts service selection exclusively to <code>branch.serviceIds</code>, and stylist selection exclusively to stylists assigned to that branch who can perform the selected service, plus an <em>Any Stylist</em> fallback.</li>
+        <li><strong>Stylist Entry Point:</strong> When customer picks a stylist, the UI restricts service selection to <code>stylist.supportedServiceIds</code>, and branch selection to <code>stylist.assignedBranchIds</code>.</li>
+      </ul>
+    </div>
+
+    <h2>3. Dual Booking Confirmation Strategy</h2>
+    <div class="card">
+      <p>Different customer preferences demand distinct confirmation workflows:</p>
+      <ul>
+        <li><strong>Specific Stylist Selected:</strong> The customer explicitly books a named professional (e.g. <em>Karthik Raja</em>). The booking request is confirmed directly by that stylist or the branch owner.</li>
+        <li><strong>"Any Available Stylist" Selected:</strong> The customer prioritizes their time slot over staff preference. The booking is marked <code>Owner Assignment Pending</code>, and the Salon Owner evaluates the shift roster and assigns the best qualified staff member.</li>
+      </ul>
+    </div>
+
+    <h2>4. Dual Review & Anti-Fraud Architecture</h2>
+    <div class="arch-box">
+      <p>Standard platforms merge salon feedback and stylist feedback into a single score, hiding whether bad reviews stem from poor premises or an underperforming contractor. StyleBook decouples the review entity:</p>
+      <ul>
+        <li><strong>Branch Review:</strong> Tracks facility quality (hygiene, waiting lounge, sanitized equipment, air conditioning).</li>
+        <li><strong>Stylist Review:</strong> Tracks human performance (scissors precision, attentiveness, customer courtesy).</li>
+        <li><strong>Uniqueness Enforced at Database Level:</strong> A unique constraint <code>UNIQUE(booking_id)</code> prevents review spamming and ensures customers can only review completed sessions (`status === 'Completed'`).</li>
+      </ul>
+    </div>
+
+    <h2>5. Hierarchical Multi-Region Scaling (Country &rarr; State &rarr; Zone &rarr; District)</h2>
+    <div class="card">
+      <p>To ensure global scalability beyond the initial Ramanathapuram rollout, master geographies are managed hierarchically:</p>
+      <ul>
+        <li><strong>Super Admin (Level 1):</strong> Can create Countries (e.g., India, UAE, UK).</li>
+        <li><strong>Country / State Admin (Level 2):</strong> Creates States, Zones, and Districts in their country.</li>
+        <li><strong>Active / DeActive Governance:</strong> Level 2 (State Admin) and Level 3 (Zonal Manager) can deactivate any service, branch, or stylist. Only <code>Active</code> entities appear in customer and management listings.</li>
+        <li><strong>Minimum Floor Price Protection:</strong> Level 1, 2, and 3 admins can set mandatory floor prices on services to prevent price deflation and protect salon profitability.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

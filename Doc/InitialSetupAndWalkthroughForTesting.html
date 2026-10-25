@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Initial Setup & End-to-End Testing Walkthrough</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; margin: 0; padding: 40px 20px; }
+    .container { max-width: 1100px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid #f59e0b; padding-bottom: 12px; margin-top: 0; }
+    h2 { color: #b45309; font-size: 20px; margin-top: 32px; border-left: 4px solid #f59e0b; padding-left: 10px; }
+    h3 { color: #334155; font-size: 16px; margin-top: 20px; }
+    .step { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 18px; margin-bottom: 20px; }
+    .step-num { display: inline-block; background: #d97706; color: #fff; width: 26px; height: 26px; border-radius: 50%; text-align: center; line-height: 26px; font-weight: 800; font-size: 13px; margin-right: 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #fef3c7; color: #92400e; font-weight: 700; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .highlight-pill { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-weight: 600; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - Setup & End-to-End Testing Walkthrough</h1>
+    <p>This guided document provides step-by-step instructions for launching, testing, and verifying the StyleBook ecosystem configured for <strong>Tamil Nadu & Ramanathapuram District</strong> with two booking entry points, dynamic carousels, dual reviews, hierarchical RBAC, governance notices, and site POCs.</p>
+
+    <h2>1. Prerequisites & Environment</h2>
+    <ul>
+      <li><strong>PostgreSQL 14+</strong> running on <code>localhost:5432</code> (User: <code>postgres</code>, Password: <code>12345678</code>, Database: <code>stylebook_db</code>).</li>
+      <li><strong>.NET 8 SDK</strong> installed (verify via <code>dotnet --version</code>).</li>
+      <li><strong>Node.js 18+ & npm</strong> installed (verify via <code>node -v</code>).</li>
+    </ul>
+
+    <h2>2. One-Click Launch (`run-all.bat`) & Cleanup (`stop-all.bat`)</h2>
+    <div class="step">
+      <p><span class="step-num">1</span><strong>Start All Services in Coordinated Dependency Order:</strong></p>
+      <pre><code>cd C:\Users\ayesh\Desktop\Mahathir\Projects\StyleBook
+run-all.bat</code></pre>
+      <p>The runner executes a coordinated launch sequence:</p>
+      <ol>
+        <li><strong>Port Conflict Guard:</strong> Scans and terminates any stale processes holding ports 5000-5005, 3000, or 3001.</li>
+        <li><strong>Database Connectivity Check:</strong> Validates PostgreSQL connection and schema availability.</li>
+        <li><strong>Sequential Service Startup:</strong> Starts Identity (5001) &rarr; MasterData (5002) &rarr; Salon (5003) &rarr; Booking (5004) &rarr; Marketing (5005) &rarr; Ocelot API Gateway (5000) &rarr; Management Web (3000) &rarr; Customer Web (3001).</li>
+      </ol>
+      <p><strong>Clean Shutdown:</strong></p>
+      <p>Press <code>Q</code> or <code>[Enter]</code> in the main runner window to terminate all spawned child processes. Alternatively, run <code>stop-all.bat</code> at any time to release all ports immediately.</p>
+    </div>
+
+    <h2>3. Pre-Configured Test Accounts (Tamil Nadu Hierarchy)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Hierarchy Level</th>
+          <th>Role</th>
+          <th>Username</th>
+          <th>Password</th>
+          <th>Jurisdiction / Scope</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Level 1</strong></td>
+          <td>Super Admin</td>
+          <td><code>superadmin@stylebook.com</code></td>
+          <td><code>Password@123</code></td>
+          <td>Global Master (Creates Countries, provisions State Admins, sets floor prices)</td>
+        </tr>
+        <tr>
+          <td><strong>Level 2</strong></td>
+          <td>State / Regional Admin</td>
+          <td><code>admin.tn@stylebook.com</code></td>
+          <td><code>Password@123</code></td>
+          <td>Tamil Nadu State (Creates States/Zones/Districts, Active/DeActive toggles)</td>
+        </tr>
+        <tr>
+          <td><strong>Level 3</strong></td>
+          <td>Zonal Manager</td>
+          <td><code>manager.ramnad@stylebook.com</code></td>
+          <td><code>Password@123</code></td>
+          <td>South Zone / Ramanathapuram Division (Approves salons, provisions owners)</td>
+        </tr>
+        <tr>
+          <td><strong>Level 4</strong></td>
+          <td>Salon Shop Owner</td>
+          <td><code>owner.royal@stylebook.com</code></td>
+          <td><code>Password@123</code></td>
+          <td>Royal Classic Unisex Salon (Creates branches, assigns stylists, verifies OTPs)</td>
+        </tr>
+        <tr>
+          <td><strong>Level 5</strong></td>
+          <td>Stylist / Barber</td>
+          <td><code>stylist.karthik@stylebook.com</code></td>
+          <td><code>Password@123</code></td>
+          <td>Karthik Raja (Master Stylist: verifies OTPs, requests shift adjustments)</td>
+        </tr>
+        <tr>
+          <td><strong>Client</strong></td>
+          <td>End Customer</td>
+          <td><code>+91 99999 00006</code></td>
+          <td><code>Password@123</code></td>
+          <td>Mohamed Irfan (Ramnad Town customer: books slots, submits dual reviews)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>4. Testing Two Booking Entry Points (Customer Web: Port 3001)</h2>
+    <div class="step">
+      <p><span class="step-num">2</span><strong>Test Entry Point 1: Choose by Branch</strong></p>
+      <ol>
+        <li>Open <code>http://localhost:3001</code>. Scroll to the <strong>Top-Rated Salon Branches</strong> carousel.</li>
+        <li>Click <strong>"Book at this Branch"</strong> on <em>Royal Classic - Ramnad Town Branch</em>.</li>
+        <li>Notice that service selection shows <strong>only</strong> the services offered at this branch.</li>
+        <li>Stylist selection shows assigned stylists plus <strong>"Any Available Stylist"</strong>. Select "Any Stylist".</li>
+        <li>Select Date and available slot (e.g., <code>02:00 PM - 02:30 PM</code>).</li>
+        <li>Apply coupon <code>RAMNAD50</code> (saves ₹50) and click <strong>"Confirm & Get 6-Digit OTP"</strong>.</li>
+        <li>Verify generated 6-digit check-in OTP and note the booking status: <em>Owner Assignment Pending</em>.</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <p><span class="step-num">3</span><strong>Test Entry Point 2: Choose by Stylist</strong></p>
+      <ol>
+        <li>On <code>http://localhost:3001</code>, scroll to the <strong>Top-Rated Stylists & Beauticians</strong> carousel.</li>
+        <li>Click <strong>"Book with Karthik"</strong> on <em>Karthik Raja</em>'s card.</li>
+        <li>Observe that the service selection displays <strong>only</strong> services certified for Karthik (Haircut, Hair Spa, Shave, Beard, Facial).</li>
+        <li>Branch selector displays <strong>only</strong> eligible branches where Karthik works (Ramnad Town & Puduvalasai).</li>
+        <li>Confirm the appointment and receive your instant 6-digit arrival OTP with direct stylist confirmation.</li>
+      </ol>
+    </div>
+
+    <h2>5. Testing Dual Reviews & Duplicate Prevention</h2>
+    <div class="step">
+      <p><span class="step-num">4</span><strong>Submit Dual Experience Feedback:</strong></p>
+      <ol>
+        <li>Click your customer name in the top right menu and open <strong>"My History & Reviews"</strong>.</li>
+        <li>Locate the completed appointment (<code>SB-RAMNAD-99</code>) and click <strong>"⭐ Leave Review / Rate"</strong>.</li>
+        <li>Provide separate star ratings (1 to 5) and written feedback for:
+          <ul>
+            <li><strong>The Branch</strong> (cleanliness, ambiance, waiting time).</li>
+            <li><strong>The Stylist</strong> (scissor precision, friendliness, skill).</li>
+          </ul>
+        </li>
+        <li>Click <strong>"Publish Dual Review"</strong>.</li>
+        <li>Notice the status updates to <code>✓ Dual Review Submitted (4★ Branch / 5★ Stylist)</code>. Clicking again is prevented by the unique review constraint!</li>
+      </ol>
+    </div>
+
+    <h2>6. Testing Active / DeActive Governance in Management Portal (Port 3000)</h2>
+    <div class="step">
+      <p><span class="step-num">5</span><strong>Verify Active Entity Propagation:</strong></p>
+      <ol>
+        <li>Open <code>http://localhost:3000</code> and sign in as <code>manager.ramnad@stylebook.com</code> (Zonal Manager).</li>
+        <li>Navigate to <strong>Salon Approvals</strong> or <strong>Stylists</strong> tab.</li>
+        <li>Toggle a branch or stylist to <strong>"Inactive"</strong>.</li>
+        <li>Refresh the Customer Web (<code>http://localhost:3001</code>) &rarr; Observe that the deactivated branch/stylist is automatically hidden from customer discovery!</li>
+      </ol>
+    </div>
+  </div>
+</body>
+</html>

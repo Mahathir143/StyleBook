@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Developer Technical Manual</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; margin: 0; padding: 40px 20px; }
+    .container { max-width: 1100px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-top: 0; }
+    h2 { color: #0369a1; font-size: 20px; margin-top: 32px; border-left: 4px solid #0284c7; padding-left: 10px; }
+    h3 { color: #334155; font-size: 16px; margin-top: 20px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f1f5f9; color: #475569; font-weight: 600; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+    .card { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - Developer Technical Manual</h1>
+    <p>This manual provides an in-depth reference for software engineers extending, maintaining, or debugging the StyleBook ecosystem.</p>
+
+    <h2>1. Solution Directory Structure</h2>
+    <pre><code>StyleBook/
+├── database/
+│   └── init.sql                          <- Schemas & Seed Data (Tamil Nadu / Ramanathapuram)
+├── src/
+│   ├── BuildingBlocks/
+│   │   └── StyleBook.Shared/             <- Repositories, Unit of Work, DbContext, Entities, JWT
+│   ├── Gateway/
+│   │   └── StyleBook.ApiGateway/         <- Ocelot API Gateway (Port 5000)
+│   ├── Services/
+│   │   ├── Identity/StyleBook.Identity.Api/   <- Port 5001 (JWT, Hierarchical RBAC, Downgrades)
+│   │   ├── MasterData/StyleBook.MasterData.Api/ <- Port 5002 (Geographies: Country->State->Zone->District)
+│   │   ├── Salon/StyleBook.Salon.Api/         <- Port 5003 (Branches, Stylists, Active Toggles, Notices)
+│   │   ├── Booking/StyleBook.Booking.Api/     <- Port 5004 (Slots, 6-Digit OTP, Coupons, Dual Reviews)
+│   │   └── Marketing/StyleBook.Marketing.Api/ <- Port 5005 (B2B Offers, Flash Promos)
+│   ├── Web/
+│   │   ├── stylebook-management/         <- React.js (JSX) + Vite (Port 3000)
+│   │   └── stylebook-customer/           <- Next.js App Router (Port 3001)
+│   └── Mobile/
+│       └── stylebook-mobile/             <- React Native / Expo Pocket Client
+├── Doc/                                  <- Technical Specifications & Testing Guides
+├── docker-compose.yml                    <- Containerized Orchestration
+├── run-all.bat                           <- Sequential Startup Master Controller
+├── stop-all.bat                          <- Port Cleanup & Process Killer
+└── README.md</code></pre>
+
+    <h2>2. Microservices Network & Port Reference</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Protocol / Port</th>
+          <th>Primary Endpoints</th>
+          <th>Responsibilities</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>API Gateway</strong></td>
+          <td>HTTP / <code>5000</code></td>
+          <td><code>/api/*</code></td>
+          <td>Ocelot reverse proxy, CORS aggregation, centralized routing.</td>
+        </tr>
+        <tr>
+          <td><strong>Identity Service</strong></td>
+          <td>HTTP / <code>5001</code></td>
+          <td><code>/api/auth/login</code>, <code>/api/auth/users</code></td>
+          <td>JWT authentication, downward user provisioning, territorial role scoping.</td>
+        </tr>
+        <tr>
+          <td><strong>Master Data Service</strong></td>
+          <td>HTTP / <code>5002</code></td>
+          <td><code>/api/master/geographies</code>, <code>/api/master/services</code></td>
+          <td>Geographic tiers (Country &rarr; State &rarr; Zone &rarr; District), Minimum Floor Prices.</td>
+        </tr>
+        <tr>
+          <td><strong>Salon Service</strong></td>
+          <td>HTTP / <code>5003</code></td>
+          <td><code>/api/salons/branches</code>, <code>/api/salons/notices</code></td>
+          <td>Branch creation, Stylist multi-skill onboarding, Branch transfers, Targeted notices.</td>
+        </tr>
+        <tr>
+          <td><strong>Booking Service</strong></td>
+          <td>HTTP / <code>5004</code></td>
+          <td><code>/api/bookings</code>, <code>/api/bookings/reviews</code></td>
+          <td>Real-time slot reservation, 6-Digit OTP check-in, Dual review and rating engine.</td>
+        </tr>
+        <tr>
+          <td><strong>Management Portal</strong></td>
+          <td>HTTP / <code>3000</code></td>
+          <td>Vite Dev / Prod</td>
+          <td>Enterprise management dashboard with downgrade user creation and governance.</td>
+        </tr>
+        <tr>
+          <td><strong>Customer Portal</strong></td>
+          <td>HTTP / <code>3001</code></td>
+          <td>Next.js 14 SSR/SSG</td>
+          <td>Smart search, horizontal carousels, Two Booking Entry Points, and Dual Reviews.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Dual Review API Specification</h2>
+    <div class="card">
+      <p><strong>Endpoint:</strong> <code>POST /api/bookings/reviews</code></p>
+      <p><strong>Request Body:</strong></p>
+      <pre><code>{
+  "bookingId": "SB-RAMNAD-01",
+  "branchId": "b1",
+  "branchRating": 5,
+  "branchComment": "Clean premises and punctual slots in Ramnad Town.",
+  "stylistId": "s1",
+  "stylistRating": 5,
+  "stylistComment": "Karthik did a fantastic haircut with precision scissors work.",
+  "customerName": "Mohamed Irfan"
+}</code></pre>
+      <p><strong>Validation Logic:</strong></p>
+      <ul>
+        <li>Verifies that the target booking exists and is in <code>Completed</code> status.</li>
+        <li>Checks PostgreSQL <code>booking.reviews</code> for existing <code>booking_id</code> to prevent duplicates.</li>
+        <li>Ensures both <code>branchRating</code> and <code>stylistRating</code> are integers between 1 and 5.</li>
+      </ul>
+    </div>
+
+    <h2>4. Targeted Compliance Notices Architecture</h2>
+    <div class="card">
+      <p>Compliance notices are scoped to specific operational recipients:</p>
+      <ul>
+        <li><code>target_type = 'STYLIST'</code>: Delivered to individual stylists (e.g. shift notice or certification renewal).</li>
+        <li><code>target_type = 'OWNER'</code>: Delivered to salon shop owners (e.g. audit requirement or licensing).</li>
+        <li><code>target_type = 'BRANCH'</code>: Delivered to branch operations managers (e.g. facility inspection).</li>
+        <li><code>target_type = 'CUSTOMER'</code>: Displayed prominently on customer landing page banner.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

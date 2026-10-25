@@ -1,0 +1,6 @@
+@StyleBook.Booking.Api_HostAddress = http://localhost:5031
+
+GET {{StyleBook.Booking.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

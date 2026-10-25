@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Technical Implementation Document</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; margin: 0; padding: 40px 20px; }
+    .container { max-width: 1100px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-top: 0; }
+    h2 { color: #1e3a8a; font-size: 20px; margin-top: 32px; border-left: 4px solid #3b82f6; padding-left: 10px; }
+    h3 { color: #334155; font-size: 16px; margin-top: 20px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f1f5f9; color: #475569; font-weight: 600; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+    .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin-bottom: 16px; }
+    .highlight { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook Platform - Technical Implementation Document</h1>
+    <p>This document details the concrete technical implementation of the StyleBook enterprise salon and grooming platform, covering .NET 8 Clean Architecture microservices, Ocelot Gateway, PostgreSQL database schemas, React JSX management portal, Next.js customer web, and mobile app.</p>
+
+    <h2>1. Microservices Architecture & Solution Structure</h2>
+    <div class="card">
+      <p>The system is built as a set of decoupled, specialized microservices fronted by an <strong>Ocelot API Gateway</strong>. Persistence is managed in <strong>PostgreSQL</strong> using dedicated domain schemas:</p>
+      <ul>
+        <li><strong>API Gateway (Port 5000):</strong> Ocelot Gateway routing requests, enforcing JWT policies, and centralizing CORS.</li>
+        <li><strong>Identity Service (Port 5001):</strong> JWT issuance, login authentication, user roles, hierarchical RBAC downgrade provisioning, and territorial allocation link tables.</li>
+        <li><strong>Master Data Service (Port 5002):</strong> Multi-region hierarchy (Countries, States, Zones, Districts), service categories, Master Services catalog with Minimum Floor Price authority.</li>
+        <li><strong>Salon Service (Port 5003):</strong> Salon onboarding, multi-branch mapping (Country &rarr; State &rarr; Zone &rarr; District), Active/DeActive toggles, stylist skill multi-select, branch transfers, and targeted compliance notices (STYLIST, OWNER, BRANCH, CUSTOMER).</li>
+        <li><strong>Booking Service (Port 5004):</strong> Dynamic slot calculation engine, 6-digit OTP verification, coupon code deduction, price bargaining, and dual review & rating submission (Branch + Stylist).</li>
+        <li><strong>Marketing Service (Port 5005):</strong> Platform B2B owner incentives and targeted customer announcements.</li>
+        <li><strong>Management & Owner Web (Port 3000):</strong> React.js JSX + Vite with mandatory login, hierarchical user provisioning (strictly downgrade users), branch/stylist active-deactive toggles, OTP start verification, shift adjustment, and POC directory.</li>
+        <li><strong>Customer Web (Port 3001):</strong> Next.js App Router with Smart Global Search, horizontally scrollable carousels, Two Booking Entry Points (Choose Branch vs Choose Stylist), and Dual Reviews.</li>
+        <li><strong>Mobile Application:</strong> Cross-platform React Native / Expo pocket client.</li>
+      </ul>
+    </div>
+
+    <h2>2. PostgreSQL Database Schema Implementation</h2>
+    <div class="card">
+      <p>The database architecture is cleanly segmented across domain schemas in <code>stylebook_db</code>:</p>
+      <pre><code>-- 1. Dual Review & Rating Schema with Booking Uniqueness
+CREATE TABLE IF NOT EXISTS booking.reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    booking_id VARCHAR(50) NOT NULL UNIQUE,
+    branch_id VARCHAR(50),
+    branch_rating INT CHECK (branch_rating BETWEEN 1 AND 5),
+    branch_comment TEXT,
+    stylist_id VARCHAR(50),
+    stylist_rating INT CHECK (stylist_rating BETWEEN 1 AND 5),
+    stylist_comment TEXT,
+    customer_name VARCHAR(100),
+    is_moderated BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Targeted Governance & Compliance Notices
+CREATE TABLE IF NOT EXISTS salon.compliance_notices (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    notice_type VARCHAR(50) NOT NULL,
+    target_type VARCHAR(50) NOT NULL, -- 'STYLIST', 'OWNER', 'BRANCH', 'CUSTOMER'
+    target_id VARCHAR(50),
+    target_name VARCHAR(150),
+    severity VARCHAR(20) DEFAULT 'Warning',
+    deadline TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Master Services with Minimum Floor Price
+CREATE TABLE IF NOT EXISTS master.services (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category_id UUID REFERENCES master.service_categories(id),
+    name VARCHAR(100) NOT NULL,
+    base_price DECIMAL(10, 2) NOT NULL,
+    minimum_floor_price DECIMAL(10, 2) NOT NULL DEFAULT 100.00,
+    duration_minutes INT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- 4. Multi-Region Geographies (Global Scalability)
+CREATE TABLE IF NOT EXISTS master.countries (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(10) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS master.states (
+    id VARCHAR(50) PRIMARY KEY,
+    country_id VARCHAR(50) REFERENCES master.countries(id),
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS master.zones (
+    id VARCHAR(50) PRIMARY KEY,
+    state_id VARCHAR(50) REFERENCES master.states(id),
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS master.districts (
+    id VARCHAR(50) PRIMARY KEY,
+    zone_id VARCHAR(50) REFERENCES master.zones(id),
+    name VARCHAR(100) NOT NULL
+);</code></pre>
+    </div>
+
+    <h2>3. Customer Web: Smart Search & Dynamic Discovery</h2>
+    <div class="card">
+      <h3>Smart Global Search Box</h3>
+      <p>The unified search box uses an in-memory or indexed relational query that matches against:</p>
+      <ul>
+        <li><strong>Brand Name:</strong> e.g., <em>Royal Classic</em>, <em>Kavitha Beauty Studio</em>.</li>
+        <li><strong>Salon / Branch Name:</strong> e.g., <em>Ramnad Town Branch</em>, <em>Puduvalasai Branch</em>.</li>
+        <li><strong>Stylist Name:</strong> e.g., <em>Karthik Raja</em>, <em>Kavitha Praveen</em>, <em>Saravanan Natarajan</em>.</li>
+        <li><strong>Location:</strong> Country (<em>India</em>), State (<em>Tamil Nadu</em>), District (<em>Ramanathapuram</em>), Zone (<em>South Zone</em>), Locality (<em>Ramnad Town</em>, <em>Puduvalasai</em>, <em>Panaikulam</em>, <em>Sakkarakottai</em>).</li>
+        <li><strong>Service Name & Category:</strong> <em>Haircut</em>, <em>Herbal Hair Spa</em>, <em>Hot Towel Shave</em>, <em>Bridal Makeover</em>, <em>Facial & Glow</em>, <em>Head Massage</em>.</li>
+      </ul>
+      
+      <h3>Dynamic Horizontally Scrollable Carousels</h3>
+      <p>Implemented via responsive flex layouts with smooth <code>scrollSnapType: 'x mandatory'</code>:</p>
+      <ul>
+        <li><strong>Trending Salons:</strong> Highlighting certified multi-branch shops with overall rating and doorstep badges.</li>
+        <li><strong>Top-Rated Branches:</strong> Direct entry point into branch profile and branch-only services.</li>
+        <li><strong>Popular Services:</strong> Instant service cards with pricing, duration, and floor-price bargain chip.</li>
+        <li><strong>Top-Rated Stylists:</strong> Personal stylist cards with bio, skill tags, rating, and direct booking trigger.</li>
+        <li><strong>Doorstep Specialists:</strong> Filtered views for certified mobile beauticians visiting customer homes.</li>
+      </ul>
+    </div>
+
+    <h2>4. Two Booking Entry Points & Relational Validation</h2>
+    <div class="card">
+      <h3>Entry Point 1: Choose a Branch (Branch-First Booking)</h3>
+      <ol>
+        <li>Customer selects branch &rarr; Loads branch profile and contact information.</li>
+        <li>Service selection displays <strong>only</strong> services offered at that branch.</li>
+        <li>Stylist selection displays stylists assigned to that branch who can perform the selected service, PLUS an <strong>"Any Available Stylist"</strong> option.</li>
+        <li><em>Confirmation Rule:</em> If "Any Stylist" is chosen, confirmation is handled by the Owner who assigns the stylist. If a specific stylist is chosen, confirmation is executed by that stylist or the owner.</li>
+        <li>Selects Date & Time Slot &rarr; Reviews Pricing & Coupons &rarr; Confirms Booking &rarr; Generates 6-Digit OTP.</li>
+      </ol>
+
+      <h3>Entry Point 2: Choose a Stylist (Stylist-First Booking)</h3>
+      <ol>
+        <li>Customer selects stylist &rarr; Loads stylist profile, experience, and certifications.</li>
+        <li>Service selection displays <strong>only</strong> services certified for that stylist.</li>
+        <li>Branch selection displays <strong>only</strong> branches where that stylist is actively assigned.</li>
+        <li>Selects Service Mode (In-Salon vs Doorstep) &rarr; Date & Slot &rarr; Reviews Pricing & Coupons &rarr; Confirms Booking.</li>
+      </ol>
+    </div>
+
+    <h2>5. Dual Customer Review & Rating System</h2>
+    <div class="card">
+      <p>Completed appointments trigger the dual review form allowing customers to evaluate both dimensions:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Review Dimension</th>
+            <th>Rating Scale</th>
+            <th>Evaluation Scope</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Salon Branch</strong></td>
+            <td>1 to 5 Stars</td>
+            <td>Hygiene, ambiance, punctuality, equipment, seating, and comfort.</td>
+          </tr>
+          <tr>
+            <td><strong>Stylist</strong></td>
+            <td>1 to 5 Stars</td>
+            <td>Skill, cutting precision, consultation, friendliness, and styling result.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="highlight">
+        <strong>Fraud Protection:</strong> Submissions are bound to <code>booking_id</code> via a database <code>UNIQUE</code> constraint, preventing duplicate reviews for the same appointment.
+      </div>
+    </div>
+
+    <h2>6. Territorial RBAC & Downgrade User Provisioning</h2>
+    <div class="card">
+      <p>User provisioning enforces strict downward hierarchy: higher roles can only provision lower roles:</p>
+      <ul>
+        <li><strong>Super Admin (Level 1):</strong> Can create Countries and provision State Admins (Level 2), Zonal Managers (Level 3), Owners (Level 4), Stylists (Level 5).</li>
+        <li><strong>State Admin (Level 2):</strong> Can create States, Zones, Districts and provision Zonal Managers (Level 3), Owners (Level 4), Stylists (Level 5) in their state.</li>
+        <li><strong>Zonal Manager (Level 3):</strong> Can provision Owners (Level 4) and Stylists (Level 5) in their zone. Approves/rejects salons and manages Active/DeActive status.</li>
+        <li><strong>Salon Owner (Level 4):</strong> Can onboard branches, multi-select stylist skills, transfer stylists between branches, assign stylists for bookings, and manage shift schedules.</li>
+        <li><strong>Stylist (Level 5):</strong> Can select/deselect personal services (skills), request shift adjustments, and verify 6-digit OTPs.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

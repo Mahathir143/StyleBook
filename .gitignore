@@ -1,0 +1,28 @@
+# Build results
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.AssemblyReference.cache
+*.AssemblyInfo.cs
+
+# Node dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js & Vite build outputs
+.next/
+dist/
+build/
+out/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

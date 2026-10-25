@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  # Database Engine
+  postgres:
+    image: postgres:16-alpine
+    container_name: stylebook-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-12345678}
+      POSTGRES_DB: stylebook_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - stylebook-network
+
+  # Distributed Cache
+  redis:
+    image: redis:7-alpine
+    container_name: stylebook-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - stylebook-network
+
+  # Ocelot API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: src/Gateway/StyleBook.ApiGateway/Dockerfile
+    container_name: stylebook-gateway
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      - identity-api
+      - masterdata-api
+      - salon-api
+      - booking-api
+      - marketing-api
+    networks:
+      - stylebook-network
+
+  # Identity & Access Microservice
+  identity-api:
+    build:
+      context: .
+      dockerfile: src/Services/Identity/StyleBook.Identity.Api/Dockerfile
+    container_name: stylebook-identity
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=stylebook_db;Username=postgres;Password=12345678
+    depends_on:
+      - postgres
+    networks:
+      - stylebook-network
+
+  # Master Data Microservice
+  masterdata-api:
+    build:
+      context: .
+      dockerfile: src/Services/MasterData/StyleBook.MasterData.Api/Dockerfile
+    container_name: stylebook-masterdata
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=stylebook_db;Username=postgres;Password=12345678
+    depends_on:
+      - postgres
+    networks:
+      - stylebook-network
+
+  # Salon & Stylist Microservice
+  salon-api:
+    build:
+      context: .
+      dockerfile: src/Services/Salon/StyleBook.Salon.Api/Dockerfile
+    container_name: stylebook-salon
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=stylebook_db;Username=postgres;Password=12345678
+    depends_on:
+      - postgres
+    networks:
+      - stylebook-network
+
+  # Booking & Negotiation Microservice
+  booking-api:
+    build:
+      context: .
+      dockerfile: src/Services/Booking/StyleBook.Booking.Api/Dockerfile
+    container_name: stylebook-booking
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=stylebook_db;Username=postgres;Password=12345678
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - stylebook-network
+
+  # Marketing & Offers Microservice
+  marketing-api:
+    build:
+      context: .
+      dockerfile: src/Services/Marketing/StyleBook.Marketing.Api/Dockerfile
+    container_name: stylebook-marketing
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=stylebook_db;Username=postgres;Password=12345678
+    depends_on:
+      - postgres
+    networks:
+      - stylebook-network
+
+  # Management & Owner Web (React.js)
+  management-web:
+    build:
+      context: ./src/Web/stylebook-management
+    container_name: stylebook-management-web
+    ports:
+      - "3000:3000"
+    networks:
+      - stylebook-network
+
+  # Customer Web (Next.js SEO)
+  customer-web:
+    build:
+      context: ./src/Web/stylebook-customer
+    container_name: stylebook-customer-web
+    ports:
+      - "3001:3001"
+    networks:
+      - stylebook-network
+
+networks:
+  stylebook-network:
+    driver: bridge
+
+volumes:
+  pgdata:

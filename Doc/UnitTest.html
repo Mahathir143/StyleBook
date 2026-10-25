@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Unit & Integration Test Suite Documentation</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; margin: 0; padding: 40px 20px; }
+    .container { max-width: 1100px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid #10b981; padding-bottom: 12px; margin-top: 0; }
+    h2 { color: #065f46; font-size: 20px; margin-top: 32px; border-left: 4px solid #10b981; padding-left: 10px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f1f5f9; color: #475569; font-weight: 600; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+    .status-pass { background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11px; }
+    .card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - Unit & Integration Test Specifications</h1>
+    <p>This document details the test suites, boundary condition validations, mock strategies, and execution reports for the StyleBook microservices, relational discovery matrix, two booking entry points, dual reviews, and territorial RBAC.</p>
+
+    <h2>1. Comprehensive Test Coverage Matrix</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Module / Service</th>
+          <th>Test Target</th>
+          <th>Scenario</th>
+          <th>Expected Outcome</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Booking Service</strong></td>
+          <td><code>POST /api/bookings/reviews</code></td>
+          <td>Customer submits dual review with valid Branch rating (5★) and Stylist rating (5★)</td>
+          <td>HTTP 200 Created; dual review saved in <code>booking.reviews</code></td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Booking Service</strong></td>
+          <td><code>POST /api/bookings/reviews</code></td>
+          <td>Duplicate submission for same completed <code>booking_id</code></td>
+          <td>HTTP 409 Conflict / 400 Bad Request ("Review has already been submitted for this booking")</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Booking Service</strong></td>
+          <td><code>POST /api/bookings/reviews</code></td>
+          <td>Customer attempts review on booking with status != 'Completed'</td>
+          <td>HTTP 400 Bad Request ("Reviews can only be submitted for completed appointments")</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Identity Service</strong></td>
+          <td><code>POST /api/auth/users</code></td>
+          <td>Zonal Manager attempts to provision a State Admin (Upgrade attempt)</td>
+          <td>HTTP 403 Forbidden ("Users cannot provision accounts above or equal to their hierarchy level")</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Salon Service</strong></td>
+          <td><code>POST /api/salons/notices</code></td>
+          <td>Issue compliance notice targeted to <code>STYLIST</code></td>
+          <td>Notice generated with <code>target_type: STYLIST</code>, displayed exclusively on stylist portal</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Salon Service</strong></td>
+          <td><code>POST /api/salons/branches</code></td>
+          <td>Branch creation with Country &rarr; State &rarr; Zone &rarr; District hierarchy</td>
+          <td>Branch entity persisted with valid foreign keys across geographic master tiers</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Salon Service</strong></td>
+          <td><code>PUT /api/salons/stylists/{id}/transfer</code></td>
+          <td>Owner transfers stylist from Ramnad Town Branch to Puduvalasai Branch</td>
+          <td>Stylist branch association updated in database; shifts updated accordingly</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Customer Web</strong></td>
+          <td><code>Global Smart Search</code></td>
+          <td>Query combines brand ("Royal"), locality ("Puduvalasai"), and service ("Haircut")</td>
+          <td>Filters salons and branches satisfying all intersection constraints</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Customer Web</strong></td>
+          <td><code>Entry Point 1 (Branch)</code></td>
+          <td>Select Branch &rarr; Select Service &rarr; Select "Any Stylist"</td>
+          <td>Booking flagged for Owner confirmation and assignment; generates valid 6-digit OTP</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Customer Web</strong></td>
+          <td><code>Entry Point 2 (Stylist)</code></td>
+          <td>Select Stylist &rarr; Shows only certified services and assigned branch locations</td>
+          <td>Relational constraint preserved; customer cannot pick uncertified services</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Master Data Service</strong></td>
+          <td><code>PUT /api/master/services/{id}/floor-price</code></td>
+          <td>Level 3 Zonal Manager updates minimum floor price for Hair Spa</td>
+          <td>Minimum floor price updated to ₹500; prevents customer bargains lower than floor</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>Management Web</strong></td>
+          <td><code>Active / DeActive Toggle</code></td>
+          <td>Level 2 State Admin deactivates uncertified salon branch</td>
+          <td>Branch status set to Inactive; immediately hidden from Customer Discovery portal</td>
+          <td><span class="status-pass">PASSED</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. Dual Review Test Suite Implementation (xUnit)</h2>
+    <div class="card">
+      <pre><code>[Fact]
+public async Task SubmitDualReview_WhenValidAndCompleted_ReturnsOk()
+{
+    // Arrange
+    var bookingId = "SB-RAMNAD-01";
+    var request = new SubmitReviewRequest
+    {
+        BookingId = bookingId,
+        BranchId = "b1",
+        BranchRating = 5,
+        BranchComment = "Clean and prompt service in Ramnad Town",
+        StylistId = "s1",
+        StylistRating = 5,
+        StylistComment = "Karthik did a fantastic haircut",
+        CustomerName = "Mohamed Irfan"
+    };
+
+    // Act
+    var result = await _bookingController.SubmitReview(request);
+
+    // Assert
+    var okResult = Assert.IsType&lt;OkObjectResult&gt;(result);
+    Assert.NotNull(okResult.Value);
+}
+
+[Fact]
+public async Task SubmitDualReview_WhenDuplicate_ReturnsBadRequest()
+{
+    // Arrange: same booking reviewed twice
+    var bookingId = "SB-RAMNAD-01";
+    var request = new SubmitReviewRequest { BookingId = bookingId, BranchRating = 5, StylistRating = 5 };
+
+    // Act
+    var firstAttempt = await _bookingController.SubmitReview(request);
+    var secondAttempt = await _bookingController.SubmitReview(request);
+
+    // Assert
+    Assert.IsType&lt;BadRequestObjectResult&gt;(secondAttempt);
+}</code></pre>
+    </div>
+  </div>
+</body>
+</html>
