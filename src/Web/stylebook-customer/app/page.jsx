@@ -312,8 +312,11 @@ export default function CustomerLandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authReason, setAuthReason] = useState('');
+  const [authTab, setAuthTab] = useState('login'); // 'login' | 'register'
   const [pendingAction, setPendingAction] = useState(null); // { type, payload }
+  const [pendingBookingExecution, setPendingBookingExecution] = useState(false);
   const [authForm, setAuthForm] = useState({ identifier: '', password: '' });
+  const [signUpForm, setSignUpForm] = useState({ name: '', phone: '', email: '', password: '', locality: 'Ramnad Town' });
   const [authError, setAuthError] = useState('');
 
   // Customer Profile (Loaded when logged in)
@@ -507,7 +510,10 @@ export default function CustomerLandingPage() {
     setAuthError('');
     showToast(`Welcome back, ${customerUser.name}! Signed in successfully.`);
 
-    if (pendingAction) {
+    if (pendingBookingExecution) {
+      setPendingBookingExecution(false);
+      executeBookingConfirmation();
+    } else if (pendingAction) {
       if (pendingAction.type === 'START_BRANCH_BOOKING') {
         openBranchBooking(pendingAction.payload.branch, pendingAction.payload.service);
       } else if (pendingAction.type === 'START_STYLIST_BOOKING') {
@@ -523,13 +529,41 @@ export default function CustomerLandingPage() {
     }
   };
 
+  // Perform Customer Registration / Sign Up
+  const handleCustomerRegister = (e) => {
+    if (e) e.preventDefault();
+    if (!signUpForm.name.trim() || !signUpForm.phone.trim()) {
+      setAuthError('Please enter your Full Name and Mobile Number.');
+      return;
+    }
+    const newUser = {
+      name: signUpForm.name.trim(),
+      phone: signUpForm.phone.trim(),
+      email: signUpForm.email.trim() || `${signUpForm.phone.trim()}@stylebook.in`,
+      locality: signUpForm.locality || 'Ramnad Town'
+    };
+    setCustomerUser(newUser);
+    setIsLoggedIn(true);
+    setShowAuthModal(false);
+    setAuthError('');
+    showToast(`Account created successfully! Welcome, ${newUser.name}.`);
+
+    if (pendingBookingExecution) {
+      setPendingBookingExecution(false);
+      executeBookingConfirmation(newUser);
+    }
+  };
+
   const handleQuickDemoLogin = () => {
     setIsLoggedIn(true);
     setShowAuthModal(false);
     setAuthError('');
     showToast('Signed in via Dev Quick-Login as Mohamed Irfan (Customer)');
 
-    if (pendingAction) {
+    if (pendingBookingExecution) {
+      setPendingBookingExecution(false);
+      executeBookingConfirmation();
+    } else if (pendingAction) {
       if (pendingAction.type === 'START_BRANCH_BOOKING') {
         openBranchBooking(pendingAction.payload.branch, pendingAction.payload.service);
       } else if (pendingAction.type === 'START_STYLIST_BOOKING') {
@@ -559,10 +593,6 @@ export default function CustomerLandingPage() {
   // ENTRY POINT 1: CHOOSE A BRANCH
   // ==========================================
   const openBranchBooking = (branch, preselectedService = null) => {
-    if (!requireLoginForAction('START_BRANCH_BOOKING', { branch, service: preselectedService }, `Sign in required to reserve an appointment slot at ${branch.name}.`)) {
-      return;
-    }
-
     const parentSalon = TAMILNADU_SALONS.find(s => s.branches.some(b => b.id === branch.id)) || TAMILNADU_SALONS[0];
     const branchServices = parentSalon.services.filter(s => branch.serviceIds ? branch.serviceIds.includes(s.id) : true);
     
@@ -584,10 +614,6 @@ export default function CustomerLandingPage() {
   // ENTRY POINT 2: CHOOSE A STYLIST
   // ==========================================
   const openStylistBooking = (stylist, preselectedService = null) => {
-    if (!requireLoginForAction('START_STYLIST_BOOKING', { stylist, service: preselectedService }, `Sign in required to book personal stylist ${stylist.name}.`)) {
-      return;
-    }
-
     // Find eligible branches where this stylist works
     const eligibleBranches = [];
     TAMILNADU_SALONS.forEach(s => {
@@ -642,8 +668,9 @@ export default function CustomerLandingPage() {
   }
   const netPayable = Math.max(0, basePrice - discountAmount);
 
-  // Confirm Booking & Place Request in PendingConfirmation state (Awaiting Stylist/Salon confirmation)
-  const handleConfirmBooking = () => {
+  // Core Booking Execution
+  const executeBookingConfirmation = (userOverride = null) => {
+    const activeClient = userOverride || customerUser;
     const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const newRef = `SB-RAMNAD-${Math.floor(10 + Math.random() * 90)}`;
     const isAnyStylist = !selectedStylist || selectedStylist.id === 'ANY';
@@ -668,10 +695,12 @@ export default function CustomerLandingPage() {
       lockedOtp: generatedOtp,
       assignedBy: confirmationType,
       branchPoc: selectedBranch ? selectedBranch.poc : (selectedSalon ? selectedSalon.poc : null),
+      customerName: activeClient.name,
+      customerPhone: activeClient.phone,
       hasReviewed: false
     };
 
-    setCustomerBookings([newBooking, ...customerBookings]);
+    setCustomerBookings(prev => [newBooking, ...prev]);
     setBookingConfirmed({
       reference: newRef,
       status: 'PendingConfirmation',
@@ -686,8 +715,21 @@ export default function CustomerLandingPage() {
       amount: netPayable,
       workType: selectedWorkType,
       confirmationType,
-      branchPoc: newBooking.branchPoc
+      branchPoc: newBooking.branchPoc,
+      customerName: activeClient.name
     });
+    showToast(`Appointment reserved under ${newRef}! Pending Salon Partner Confirmation.`);
+  };
+
+  // Confirm Booking & Place Request in PendingConfirmation state (Awaiting Stylist/Salon confirmation)
+  const handleConfirmBooking = () => {
+    if (!isLoggedIn) {
+      setAuthReason('Almost done! Please Sign In or Create an Account to confirm your appointment and receive your 6-digit check-in OTP.');
+      setPendingBookingExecution(true);
+      setShowAuthModal(true);
+      return;
+    }
+    executeBookingConfirmation();
   };
 
   // Simulate Salon/Stylist Confirmation on Customer Portal
@@ -1916,18 +1958,18 @@ export default function CustomerLandingPage() {
       {/* ======================================================== */}
       {showAuthModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, padding: 20 }}>
-          <div style={{ background: '#ffffff', borderRadius: 16, width: '100%', maxWidth: 460, padding: 28, position: 'relative', boxShadow: '0 20px 40px rgba(0,0,0,0.25)' }}>
+          <div style={{ background: '#ffffff', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', padding: 28, position: 'relative', boxShadow: '0 20px 40px rgba(0,0,0,0.25)' }}>
             
             <button 
-              onClick={() => { setShowAuthModal(false); setAuthError(''); }}
+              onClick={() => { setShowAuthModal(false); setAuthError(''); setPendingBookingExecution(false); }}
               style={{ position: 'absolute', top: 20, right: 20, background: '#f1f5f9', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
               <X size={18} />
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Lock size={20} color="#2563eb" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Lock size={22} color="#2563eb" />
               </div>
               <div>
                 <h3 style={{ fontSize: 20, fontWeight: 800 }}>Customer Authentication</h3>
@@ -1935,74 +1977,153 @@ export default function CustomerLandingPage() {
               </div>
             </div>
 
+            {/* Auth Tab Switcher */}
+            <div style={{ display: 'flex', background: '#f1f5f9', padding: 4, borderRadius: 10, marginBottom: 16 }}>
+              <button
+                type="button"
+                onClick={() => { setAuthTab('login'); setAuthError(''); }}
+                style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', fontWeight: 700, fontSize: 13, background: authTab === 'login' ? '#ffffff' : 'transparent', color: authTab === 'login' ? '#2563eb' : '#64748b', cursor: 'pointer', boxShadow: authTab === 'login' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthTab('register'); setAuthError(''); }}
+                style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', fontWeight: 700, fontSize: 13, background: authTab === 'register' ? '#ffffff' : 'transparent', color: authTab === 'register' ? '#2563eb' : '#64748b', cursor: 'pointer', boxShadow: authTab === 'register' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}
+              >
+                Create Account (Sign Up)
+              </button>
+            </div>
+
             {authReason && (
               <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#1e40af' }}>
-                <p>{authReason}</p>
+                <p style={{ fontWeight: 600 }}>{authReason}</p>
               </div>
             )}
 
-            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 12px', marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-              <AlertTriangle size={16} color="#d97706" style={{ marginTop: 2, flexShrink: 0 }} />
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: '#92400e' }}>DEV SOURCE ENVIRONMENT</p>
-                <p style={{ fontSize: 10, color: '#78350f' }}>1-Click demo test login is active for rapid review. In Production builds, quick logins are stripped and real phone OTP verification is enforced.</p>
-              </div>
-            </div>
-
             {authError && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 12px', marginBottom: 14, color: '#b91c1c', fontSize: 12 }}>
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 12px', marginBottom: 14, color: '#b91c1c', fontSize: 12, fontWeight: 600 }}>
                 {authError}
               </div>
             )}
 
-            <form onSubmit={handleCustomerLogin}>
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Phone Number or Email</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. +91 99999 00006 or mohamed@gmail.com"
-                  value={authForm.identifier}
-                  onChange={(e) => setAuthForm({ ...authForm, identifier: e.target.value })}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, marginTop: 4, fontSize: 13 }}
-                />
-              </div>
+            {authTab === 'login' ? (
+              <form onSubmit={handleCustomerLogin}>
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Phone Number or Email</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. +91 99999 00006 or mohamed@gmail.com"
+                    value={authForm.identifier}
+                    onChange={(e) => setAuthForm({ ...authForm, identifier: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: 13 }}
+                  />
+                </div>
 
-              <div style={{ marginBottom: 18 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Password</label>
-                <input 
-                  type="password" 
-                  placeholder="Enter password (default: Password@123)"
-                  value={authForm.password}
-                  onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, marginTop: 4, fontSize: 13 }}
-                />
-              </div>
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Password</label>
+                  <input 
+                    type="password" 
+                    placeholder="Enter password (default: Password@123)"
+                    value={authForm.password}
+                    onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: 13 }}
+                  />
+                </div>
 
-              <button 
-                type="submit"
-                style={{ width: '100%', background: '#2563eb', color: '#fff', padding: '11px', borderRadius: 8, fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}
-              >
-                Sign In & Continue
-              </button>
-            </form>
+                <button 
+                  type="submit"
+                  style={{ width: '100%', background: '#2563eb', color: '#fff', padding: '11px', borderRadius: 8, fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}
+                >
+                  {pendingBookingExecution ? 'Sign In & Confirm My Slot →' : 'Sign In & Continue'}
+                </button>
 
-            <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', marginBottom: 8 }}>
-                ⚡ Fast 1-Click Demo Login
-              </p>
-              <button 
-                onClick={handleQuickDemoLogin}
-                style={{ width: '100%', background: '#f0fdf4', border: '1px solid #86efac', color: '#166534', padding: '10px', borderRadius: 8, fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}
-              >
-                <UserCheck size={16} /> Sign In as Mohamed Irfan (Customer)
-              </button>
-            </div>
+                <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 8 }}>
+                    Quick 1-Click Demo Testing
+                  </p>
+                  <button 
+                    type="button"
+                    onClick={handleQuickDemoLogin}
+                    style={{ width: '100%', background: '#f0fdf4', border: '1px solid #86efac', color: '#166534', padding: '10px', borderRadius: 8, fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}
+                  >
+                    <UserCheck size={16} /> 1-Click Sign In as Mohamed Irfan
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleCustomerRegister}>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Full Name *</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Rahul Sharma / Ananya"
+                    value={signUpForm.name}
+                    onChange={(e) => setSignUpForm({ ...signUpForm, name: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: 13 }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Mobile Number (For 6-Digit OTP) *</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. +91 98400 12345"
+                    value={signUpForm.phone}
+                    onChange={(e) => setSignUpForm({ ...signUpForm, phone: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: 13 }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Email Address (Optional)</label>
+                  <input 
+                    type="email" 
+                    placeholder="e.g. yourname@gmail.com"
+                    value={signUpForm.email}
+                    onChange={(e) => setSignUpForm({ ...signUpForm, email: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: 13 }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Create Password *</label>
+                  <input 
+                    type="password" 
+                    placeholder="Create a secure password"
+                    value={signUpForm.password}
+                    onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: 13 }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Preferred Locality</label>
+                  <select
+                    value={signUpForm.locality}
+                    onChange={(e) => setSignUpForm({ ...signUpForm, locality: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: 13, background: '#fff' }}
+                  >
+                    <option value="Ramnad Town">Ramnad Town</option>
+                    <option value="Puduvalasai">Puduvalasai</option>
+                    <option value="Panaikulam">Panaikulam</option>
+                    <option value="Sakkarakottai">Sakkarakottai</option>
+                  </select>
+                </div>
+
+                <button 
+                  type="submit"
+                  style={{ width: '100%', background: '#16a34a', color: '#fff', padding: '11px', borderRadius: 8, fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}
+                >
+                  {pendingBookingExecution ? 'Create Account & Confirm Booking →' : 'Complete Registration'}
+                </button>
+              </form>
+            )}
 
           </div>
         </div>
       )}
 
-      {/* ======================================================== */}
       {/* 8. MY ACTIVE BOOKINGS MODAL                              */}
       {/* ======================================================== */}
       {showMyBookings && (
