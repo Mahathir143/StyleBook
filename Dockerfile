@@ -1,38 +1,33 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy solution and project files
+# Copy project files for fast restore caching
 COPY StyleBook.sln ./
 COPY src/BuildingBlocks/StyleBook.Shared/*.csproj src/BuildingBlocks/StyleBook.Shared/
 COPY src/Gateway/StyleBook.ApiGateway/*.csproj src/Gateway/StyleBook.ApiGateway/
-COPY src/Services/Identity/StyleBook.Identity.Api/*.csproj src/Services/Identity/StyleBook.Identity.Api/
-COPY src/Services/MasterData/StyleBook.MasterData.Api/*.csproj src/Services/MasterData/StyleBook.MasterData.Api/
-COPY src/Services/Salon/StyleBook.Salon.Api/*.csproj src/Services/Salon/StyleBook.Salon.Api/
-COPY src/Services/Booking/StyleBook.Booking.Api/*.csproj src/Services/Booking/StyleBook.Booking.Api/
-COPY src/Services/Marketing/StyleBook.Marketing.Api/*.csproj src/Services/Marketing/StyleBook.Marketing.Api/
 
-RUN dotnet restore StyleBook.sln
+RUN dotnet restore src/Gateway/StyleBook.ApiGateway/StyleBook.ApiGateway.csproj
 
-# Copy everything and publish all services
-COPY . .
-RUN dotnet publish src/Services/Identity/StyleBook.Identity.Api/StyleBook.Identity.Api.csproj -c Release -o /app/Identity
-RUN dotnet publish src/Services/MasterData/StyleBook.MasterData.Api/StyleBook.MasterData.Api.csproj -c Release -o /app/MasterData
-RUN dotnet publish src/Services/Salon/StyleBook.Salon.Api/StyleBook.Salon.Api.csproj -c Release -o /app/Salon
-RUN dotnet publish src/Services/Booking/StyleBook.Booking.Api/StyleBook.Booking.Api.csproj -c Release -o /app/Booking
-RUN dotnet publish src/Services/Marketing/StyleBook.Marketing.Api/StyleBook.Marketing.Api.csproj -c Release -o /app/Marketing
-RUN dotnet publish src/Gateway/StyleBook.ApiGateway/StyleBook.ApiGateway.csproj -c Release -o /app/Gateway
+# Copy full source and publish
+COPY src/BuildingBlocks/StyleBook.Shared/ src/BuildingBlocks/StyleBook.Shared/
+COPY src/Gateway/StyleBook.ApiGateway/ src/Gateway/StyleBook.ApiGateway/
 
-# Runtime image
+RUN dotnet publish src/Gateway/StyleBook.ApiGateway/StyleBook.ApiGateway.csproj -c Release -o /app/publish
+
+# Lean runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl bash && rm -rf /var/lib/apt/lists/*
-
-COPY --from=build /app /app
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
+# Low memory optimizations for cloud free-tier hosting
+ENV DOTNET_gcServer=0
+ENV DOTNET_TieredPGO=0
+ENV DOTNET_EnableWriteXorExecute=0
 ENV ASPNETCORE_ENVIRONMENT=Production
-EXPOSE 5000 8080
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+COPY --from=build /app/publish .
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
+EXPOSE 5000 8080 10000
+
+ENTRYPOINT ["./entrypoint.sh"]
