@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - 100% Free Cloud Live Deployment Guide (Step-by-Step)</title>
+  <style>
+    :root {
+      --primary: #7c3aed; --primary-light: #f5f3ff; --primary-dark: #5b21b6;
+      --secondary: #0d9488; --text: #0f172a; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0;
+      --success: #10b981; --warning: #f59e0b;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text); background: var(--bg); margin: 0; padding: 30px 15px; }
+    .container { max-width: 1100px; margin: 0 auto; background: var(--card); padding: 45px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
+    h2 { color: var(--primary-dark); font-size: 20px; margin-top: 36px; border-left: 4px solid var(--primary); padding-left: 10px; }
+    h3 { color: #1e293b; font-size: 16px; margin-top: 20px; }
+    .step-card { border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin: 18px 0; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+    .step-num { display: inline-block; background: var(--primary); color: #fff; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 10px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; font-family: Consolas, monospace; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th { background: #f1f5f9; color: #334155; text-align: left; padding: 10px; border: 1px solid var(--border); }
+    td { padding: 10px; border: 1px solid var(--border); }
+    .badge-free { background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 4px; font-weight: 800; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - 100% Free Live Cloud Deployment Guide</h1>
+    <p>Complete Zero-Dollar Production Stack: Cloud PostgreSQL + Dockerized .NET Microservices + Global Edge Frontends</p>
+
+    <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; margin: 20px 0; color: #166534; font-size: 14px;">
+      <strong>✓ 100% Free Architecture:</strong> No credit card required. Uses free hobby tiers of <strong>Neon.tech</strong> (PostgreSQL), <strong>Render.com</strong> (Backend Microservices), and <strong>Vercel</strong> (Frontends).
+    </div>
+
+    <!-- ARCHITECTURE OVERVIEW -->
+    <h2>Live Cloud Stack Topology</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Layer</th>
+          <th>Provider</th>
+          <th>Free Tier Specification</th>
+          <th>Your Live URL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Database</strong></td>
+          <td><a href="https://neon.tech" target="_blank">Neon.tech</a></td>
+          <td><span class="badge-free">FREE FOREVER</span> 0.5 GB PostgreSQL 16 Serverless</td>
+          <td><code>postgresql://...neon.tech/stylebook_db</code></td>
+        </tr>
+        <tr>
+          <td><strong>2. Backend APIs & Gateway</strong></td>
+          <td><a href="https://render.com" target="_blank">Render.com</a></td>
+          <td><span class="badge-free">FREE FOREVER</span> 1 Web Service (Docker Container with all 5 microservices + Ocelot)</td>
+          <td><code>https://stylebook-api.onrender.com</code></td>
+        </tr>
+        <tr>
+          <td><strong>3. Customer App (Next.js)</strong></td>
+          <td><a href="https://vercel.com" target="_blank">Vercel</a></td>
+          <td><span class="badge-free">FREE FOREVER</span> Global CDN, automatic HTTPS</td>
+          <td><code>https://stylebook-customer.vercel.app</code></td>
+        </tr>
+        <tr>
+          <td><strong>4. Management App (React)</strong></td>
+          <td><a href="https://vercel.com" target="_blank">Vercel</a></td>
+          <td><span class="badge-free">FREE FOREVER</span> Global CDN, automatic HTTPS</td>
+          <td><code>https://stylebook-management.vercel.app</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- STEP 1: NEON DATABASE -->
+    <h2>Step 1: Create Free PostgreSQL Database on Neon.tech (3 Minutes)</h2>
+    <div class="step-card">
+      <span class="step-num">Step 1.1</span> <strong>Sign Up & Create Project</strong>
+      <ol style="padding-left: 20px; font-size: 14px;">
+        <li>Go to <a href="https://neon.tech" target="_blank"><strong>https://neon.tech</strong></a> and click <strong>"Sign in with GitHub"</strong>.</li>
+        <li>Click <strong>"Create a project"</strong>:
+          <br>&bull; Project Name: <code>stylebook-db</code>
+          <br>&bull; Region: Select <strong>AWS / Asia Pacific (Singapore)</strong> or closest to you.
+          <br>&bull; PostgreSQL Version: <strong>16</strong>.
+        </li>
+        <li>Click <strong>"Create project"</strong>.</li>
+      </ol>
+
+      <span class="step-num">Step 1.2</span> <strong>Execute Schema Initialization (`database/init.sql`)</strong>
+      <ol style="padding-left: 20px; font-size: 14px;">
+        <li>In your Neon dashboard sidebar, click <strong>"SQL Editor"</strong>.</li>
+        <li>Open the file on your machine: <br><code>C:\Users\ayesh\Desktop\Mahathir\Projects\StyleBook\database\init.sql</code></li>
+        <li>Copy the entire content of <code>init.sql</code>, paste it into Neon's SQL Editor, and click <strong>"Run"</strong>.</li>
+        <li>Verify: Neon will confirm that schemas (<code>master</code>, <code>identity</code>, <code>salon</code>, <code>booking</code>, <code>billing</code>, <code>accounting</code>) and seed data were created successfully!</li>
+      </ol>
+
+      <span class="step-num">Step 1.3</span> <strong>Copy Connection String</strong>
+      <p style="font-size: 14px;">On your Neon project dashboard, copy the <strong>Connection string</strong> (Select <strong>.NET</strong> or <strong>Connection String</strong>):</p>
+      <pre><code>Host=ep-cool-butterfly-123456.ap-southeast-1.aws.neon.tech;Database=neondb;Username=stylebook_owner;Password=YOUR_SECRET_PASSWORD;SSL Mode=Require;Trust Server Certificate=true;</code></pre>
+      <p style="font-size: 13px; color: #64748b;">Save this connection string—you will paste it into Render in Step 2!</p>
+    </div>
+
+    <!-- STEP 2: RENDER BACKEND -->
+    <h2>Step 2: Deploy Backend & Ocelot Gateway on Render.com (5 Minutes)</h2>
+    <div class="step-card">
+      <span class="step-num">Step 2.1</span> <strong>Connect GitHub to Render</strong>
+      <ol style="padding-left: 20px; font-size: 14px;">
+        <li>Go to <a href="https://render.com" target="_blank"><strong>https://render.com</strong></a> and log in with your GitHub account.</li>
+        <li>On the Render dashboard, click <strong>"New +" &rarr; "Web Service"</strong>.</li>
+        <li>Select <strong>"Build and deploy from a Git repository"</strong> & click Next.</li>
+        <li>Choose your repository: <strong><code>Mahathir143/StyleBook</code></strong>.</li>
+      </ol>
+
+      <span class="step-num">Step 2.2</span> <strong>Configure Web Service</strong>
+      <ul style="padding-left: 20px; font-size: 14px;">
+        <li><strong>Name:</strong> <code>stylebook-api</code></li>
+        <li><strong>Region:</strong> Singapore (Southeast Asia) or closest.</li>
+        <li><strong>Runtime:</strong> <strong>Docker</strong> (Render will automatically detect our root <code>Dockerfile</code>!).</li>
+        <li><strong>Instance Type:</strong> <strong>Free ($0/month)</strong>.</li>
+      </ul>
+
+      <span class="step-num">Step 2.3</span> <strong>Add Database Environment Variable</strong>
+      <p style="font-size: 14px;">Scroll down to <strong>"Environment Variables"</strong> and add:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>ConnectionStrings__DefaultConnection</code></td>
+            <td><em>(Paste your Neon connection string from Step 1.3)</em></td>
+          </tr>
+          <tr>
+            <td><code>ASPNETCORE_ENVIRONMENT</code></td>
+            <td><code>Production</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <span class="step-num">Step 2.4</span> <strong>Deploy</strong>
+      <p style="font-size: 14px;">Click <strong>"Create Web Service"</strong>. Render will build the Docker container and start all 5 microservices and the Ocelot Gateway.</p>
+      <p style="font-size: 14px;">Once built, you will get your live backend URL: <br><strong style="color: #7c3aed;"><code>https://stylebook-api.onrender.com</code></strong></p>
+    </div>
+
+    <!-- STEP 3: VERCEL CUSTOMER -->
+    <h2>Step 3: Deploy Customer Web App on Vercel (2 Minutes)</h2>
+    <div class="step-card">
+      <ol style="padding-left: 20px; font-size: 14px;">
+        <li>Go to <a href="https://vercel.com" target="_blank"><strong>https://vercel.com</strong></a> and log in with GitHub.</li>
+        <li>Click <strong>"Add New..." &rarr; "Project"</strong>.</li>
+        <li>Import <strong><code>Mahathir143/StyleBook</code></strong>.</li>
+        <li>In <strong>Root Directory</strong>: Click <em>Edit</em> and select: <br><code>src/Web/stylebook-customer</code></li>
+        <li>Framework Preset: <strong>Next.js</strong>.</li>
+        <li>(Optional) In Environment Variables, add:
+          <br><code>NEXT_PUBLIC_API_URL</code> = <code>https://stylebook-api.onrender.com</code>
+        </li>
+        <li>Click <strong>"Deploy"</strong>.</li>
+        <li>Live URL: <strong style="color: #10b981;"><code>https://stylebook-customer.vercel.app</code></strong></li>
+      </ol>
+    </div>
+
+    <!-- STEP 4: VERCEL MANAGEMENT -->
+    <h2>Step 4: Deploy Management Portal on Vercel (2 Minutes)</h2>
+    <div class="step-card">
+      <ol style="padding-left: 20px; font-size: 14px;">
+        <li>On Vercel, click <strong>"Add New..." &rarr; "Project"</strong>.</li>
+        <li>Import the same repo: <strong><code>Mahathir143/StyleBook</code></strong>.</li>
+        <li>In <strong>Root Directory</strong>: Click <em>Edit</em> and select: <br><code>src/Web/stylebook-management</code></li>
+        <li>Framework Preset: <strong>Vite</strong>.</li>
+        <li>Build Command: <code>npm run build</code> &bull; Output Directory: <code>dist</code>.</li>
+        <li>Click <strong>"Deploy"</strong>.</li>
+        <li>Live URL: <strong style="color: #7c3aed;"><code>https://stylebook-management.vercel.app</code></strong></li>
+      </ol>
+    </div>
+
+    <!-- STEP 5: DEMO WALKTHROUGH -->
+    <h2>Step 5: How to Demonstrate Live to Stakeholders</h2>
+    <div class="step-card" style="background: #faf5ff; border-color: #ddd6fe;">
+      <h3 style="margin-top: 0; color: var(--primary-dark);">The 3-Minute Live Showcase:</h3>
+      <ol style="padding-left: 20px; font-size: 14px;">
+        <li><strong>Open on Smartphone:</strong> Open <code>https://stylebook-customer.vercel.app</code> on your phone. Book an appointment at Royal Classic or Kavitha Doorstep. Notice that the Arrival OTP is <strong>LOCKED</strong> in <code>PendingConfirmation</code>.</li>
+        <li><strong>Open on Laptop:</strong> Open <code>https://stylebook-management.vercel.app</code>. Sign in as <strong>Zonal Manager</strong> (<code>zonal_ramnad</code>) &rarr; show the <strong>Approvals Queue</strong>. Notice that Zonal Manager <em>cannot</em> enter customer check-in OTPs (strict scope!).</li>
+        <li><strong>Accept as Owner:</strong> Switch to <strong>Shop Owner</strong> (<code>owner_anwar</code>) &rarr; click <strong>"Accept & Confirm Booking"</strong> &rarr; the customer's phone instantly unlocks the <strong>6-digit green Arrival OTP</strong>!</li>
+        <li><strong>Verify & Complete:</strong> Enter the OTP on the owner's screen &rarr; click "Verify & Start" &rarr; click "Mark Completed". Show that platform commission is automatically debited from the owner's prepaid wallet!</li>
+      </ol>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; font-size: 13px; color: #64748b;">
+      StyleBook Cloud Deployment Guide &bull; Ready for 100% Free Live Demos
+    </div>
+  </div>
+</body>
+</html>
