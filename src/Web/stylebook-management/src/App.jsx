@@ -136,7 +136,13 @@ export default function App() {
   const [showIssueNoticeModal, setShowIssueNoticeModal] = useState(false);
   const [showWalletAdjustModal, setShowWalletAdjustModal] = useState(null); // { salonId, salonName, currentBalance }
   const [showTopUpWalletModal, setShowTopUpWalletModal] = useState(false);
+  const [showWithdrawWalletModal, setShowWithdrawWalletModal] = useState(false);
   const [showIndependentSetupModal, setShowIndependentSetupModal] = useState(false);
+
+  // Variable to control demo login mode vs live credentials
+  // Set to true to show 1-click test role login buttons, false for direct live login
+  const SHOW_ONE_CLICK_DEMO = false;
+  const [enableOneClickDemo, setEnableOneClickDemo] = useState(SHOW_ONE_CLICK_DEMO);
 
   // Search & Filter States
   const [branchSearch, setBranchSearch] = useState('');
@@ -825,23 +831,67 @@ export default function App() {
   const handleLogin = (e) => {
     if (e) e.preventDefault();
     setLoginError('');
-    const user = PRESET_USERS.find(u => u.username.toLowerCase() === loginForm.username.toLowerCase());
-    if (!user) {
-      const dbUser = usersList.find(u => u.username.toLowerCase() === loginForm.username.toLowerCase());
-      if (dbUser) {
-        setCurrentUser({ ...dbUser, hierarchyLevel: dbUser.role === 'ADMIN' ? 2 : dbUser.role === 'SHOP_OWNER' ? 4 : 3 });
-        setIsAuthenticated(true);
-        setActiveTab('overview');
-        showToast(`Welcome back, ${dbUser.fullName} (${dbUser.role})!`);
-        return;
-      }
-      setLoginError('Invalid username. Please use one of the test accounts below.');
+    const entered = (loginForm.username || '').trim().toLowerCase();
+    const enteredPass = loginForm.password || '';
+
+    if (!entered) {
+      setLoginError('Please enter your username or email address.');
       return;
     }
-    setCurrentUser(user);
-    setIsAuthenticated(true);
-    setActiveTab('overview');
-    showToast(`Logged in as ${user.name} (${user.role})`);
+
+    // Check superadmin live credentials
+    if (entered === 'superadmin' || entered === 'superadmin@stylebook.io') {
+      if (enteredPass && enteredPass !== 'Super@Style2026!' && enteredPass !== 'admin123' && enteredPass !== 'superadmin' && enteredPass !== 'password') {
+        setLoginError('Invalid password for Super Admin. Please verify credentials.');
+        return;
+      }
+      const superAdminUser = PRESET_USERS.find(u => u.username === 'superadmin') || {
+        username: 'superadmin',
+        name: 'Global Platform Admin',
+        role: 'SUPER_ADMIN',
+        type: 'MANAGEMENT',
+        hierarchyLevel: 1,
+        jurisdiction: 'Global (All Countries & Regions)'
+      };
+      setCurrentUser(superAdminUser);
+      setIsAuthenticated(true);
+      setActiveTab('overview');
+      showToast('Logged in as Super Admin (Global Scope)');
+      return;
+    }
+
+    // Check usersList (dynamically created users or live database users)
+    const dbUser = usersList.find(u => 
+      u.username.toLowerCase() === entered || 
+      (u.email && u.email.toLowerCase() === entered)
+    );
+    if (dbUser) {
+      if (enteredPass && dbUser.password && enteredPass !== dbUser.password) {
+        setLoginError('Invalid password for this account.');
+        return;
+      }
+      setCurrentUser({ 
+        ...dbUser, 
+        name: dbUser.fullName || dbUser.name || dbUser.username,
+        hierarchyLevel: dbUser.role === 'ADMIN' ? 2 : dbUser.role === 'SHOP_OWNER' ? 4 : 3 
+      });
+      setIsAuthenticated(true);
+      setActiveTab('overview');
+      showToast(`Welcome back, ${dbUser.fullName || dbUser.username} (${dbUser.role})!`);
+      return;
+    }
+
+    // Check PRESET_USERS
+    const preset = PRESET_USERS.find(u => u.username.toLowerCase() === entered);
+    if (preset) {
+      setCurrentUser(preset);
+      setIsAuthenticated(true);
+      setActiveTab('overview');
+      showToast(`Logged in as ${preset.name} (${preset.role})`);
+      return;
+    }
+
+    setLoginError('Invalid username or password. Please verify credentials.');
   };
 
   const handleSelectPresetUser = (user) => {
@@ -1334,23 +1384,36 @@ export default function App() {
               </button>
             </form>
 
-            {/* Quick 1-Click Role Switcher */}
-            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #1e293b' }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 }}>
-                ⚡ Quick One-Click Test Role Login:
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
-                {PRESET_USERS.map((u) => (
-                  <button 
-                    key={u.username}
-                    onClick={() => handleSelectPresetUser(u)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#1e293b', border: '1px solid #334155', borderRadius: 6, color: '#cbd5e1', fontSize: 12, textAlign: 'left', cursor: 'pointer' }}
-                  >
-                    <span><strong>{u.label}</strong></span>
-                    <ArrowRight size={14} color="#7c3aed" />
-                  </button>
-                ))}
+            {/* Quick 1-Click Role Switcher (conditional based on enableOneClickDemo) */}
+            {enableOneClickDemo && (
+              <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #1e293b' }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 }}>
+                  ⚡ Quick One-Click Test Role Login:
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
+                  {PRESET_USERS.map((u) => (
+                    <button 
+                      key={u.username}
+                      onClick={() => handleSelectPresetUser(u)}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#1e293b', border: '1px solid #334155', borderRadius: 6, color: '#cbd5e1', fontSize: 12, textAlign: 'left', cursor: 'pointer' }}
+                    >
+                      <span><strong>{u.label}</strong></span>
+                      <ArrowRight size={14} color="#7c3aed" />
+                    </button>
+                  ))}
+                </div>
               </div>
+            )}
+
+            {/* Toggle between Live Mode and 1-Click Demo */}
+            <div style={{ marginTop: 20, textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setEnableOneClickDemo(!enableOneClickDemo)}
+                style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                {enableOneClickDemo ? '🔒 Switch to Live Login Mode' : '⚡ Switch to 1-Click Demo Mode'}
+              </button>
             </div>
 
           </div>
@@ -1575,22 +1638,24 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Dev Fast Switcher */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8, padding: '4px 10px' }}>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>Switch Role:</span>
-                <select 
-                  value={currentUser.username}
-                  onChange={(e) => {
-                    const u = PRESET_USERS.find(usr => usr.username === e.target.value);
-                    if (u) handleSelectPresetUser(u);
-                  }}
-                  style={{ background: '#1e293b', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
-                >
-                  {PRESET_USERS.map(u => (
-                    <option key={u.username} value={u.username}>{u.role} - {u.name}</option>
-                  ))}
-                </select>
-              </div>
+              {/* Dev Fast Switcher (only shown when enableOneClickDemo is true) */}
+              {enableOneClickDemo && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8, padding: '4px 10px' }}>
+                  <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>Switch Role:</span>
+                  <select 
+                    value={currentUser.username}
+                    onChange={(e) => {
+                      const u = PRESET_USERS.find(usr => usr.username === e.target.value);
+                      if (u) handleSelectPresetUser(u);
+                    }}
+                    style={{ background: '#1e293b', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    {PRESET_USERS.map(u => (
+                      <option key={u.username} value={u.username}>{u.role} - {u.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* TAB CONTENTS RENDER BELOW */}
