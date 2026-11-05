@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Technical Implementation Specification</title>
+  <style>
+    :root {
+      --primary: #7c3aed; --primary-light: #f5f3ff; --primary-dark: #5b21b6;
+      --secondary: #0d9488; --text: #0f172a; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text); background: var(--bg); margin: 0; padding: 30px 15px; }
+    .container { max-width: 1200px; margin: 0 auto; background: var(--card); padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
+    h2 { color: var(--primary-dark); font-size: 20px; margin-top: 32px; border-left: 4px solid var(--primary); padding-left: 10px; }
+    h3 { color: #1e293b; font-size: 16px; margin-top: 20px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; font-family: Consolas, monospace; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 5px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th { background: #f1f5f9; color: #334155; text-align: left; padding: 10px; border: 1px solid var(--border); }
+    td { padding: 10px; border: 1px solid var(--border); }
+    .tag { display: inline-block; padding: 2px 6px; font-size: 11px; font-weight: 700; border-radius: 3px; background: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - Technical Implementation Specification v2.0</h1>
+    <p>Complete Engineering Walkthrough: Microservices, Gateway Routing, Entity Framework Repositories & Frontend UI Architecture</p>
+
+    <h2>1. Codebase Directory Topology</h2>
+    <pre><code>StyleBook/
+&boxvr;&boxh;&boxh; database/
+&boxv;   &boxur;&boxh;&boxh; init.sql                    # PostgreSQL schema definition & Tamil Nadu seed data
+&boxvr;&boxh;&boxh; src/
+&boxv;   &boxvr;&boxh;&boxh; BuildingBlocks/
+&boxv;   &boxv;   &boxur;&boxh;&boxh; StyleBook.Shared/       # Shared Domain entities, EF DbContext, Repositories
+&boxv;   &boxvr;&boxh;&boxh; Gateway/
+&boxv;   &boxv;   &boxur;&boxh;&boxh; StyleBook.ApiGateway/   # Ocelot reverse proxy & route aggregator (Port 5000)
+&boxv;   &boxvr;&boxh;&boxh; Services/
+&boxv;   &boxv;   &boxvr;&boxh;&boxh; StyleBook.MasterData.Api/ # Master Geographies, Services & Work Types (Port 5001)
+&boxv;   &boxv;   &boxvr;&boxh;&boxh; StyleBook.Identity.Api/   # Auth, JWT, Users & Territorial Scoping (Port 5002)
+&boxv;   &boxv;   &boxvr;&boxh;&boxh; StyleBook.Salon.Api/      # Salons, Branches, Stylists, Pricing & Rosters (Port 5003)
+&boxv;   &boxv;   &boxvr;&boxh;&boxh; StyleBook.Booking.Api/    # Slot engine, OTPs, Reviews & Negotiations (Port 5004)
+&boxv;   &boxv;   &boxvr;&boxh;&boxh; StyleBook.Marketing.Api/  # Offers, Coupons & Broadcast Announcements (Port 5005)
+&boxv;   &boxv;   &boxur;&boxh;&boxh; StyleBook.Billing.Api/    # Subscriptions, Wallets & Financial Payouts (Port 5006)
+&boxv;   &boxvr;&boxh;&boxh; Web/
+&boxv;   &boxv;   &boxvr;&boxh;&boxh; stylebook-management/    # Vite React Management & Owner Portal (Port 3000)
+&boxv;   &boxv;   &boxur;&boxh;&boxh; stylebook-customer/      # Next.js 14 App Router Marketplace (Port 3001)
+&boxv;   &boxur;&boxh;&boxh; Mobile/
+&boxv;       &boxur;&boxh;&boxh; stylebook-mobile/        # React Native Stylist & Check-in Mobile App
+&boxvr;&boxh;&boxh; docker-compose.yml              # Multi-container orchestration
+&boxvr;&boxh;&boxh; run-all.bat                     # Windows one-click local orchestration script
+&boxur;&boxh;&boxh; stop-all.bat                    # Graceful process cleanup script</code></pre>
+
+    <h2>2. Microservices Network & Ocelot Gateway Routing</h2>
+    <p>All external traffic flows through the Ocelot Gateway on <code>http://localhost:5000</code>:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Upstream Path (Gateway URL)</th>
+          <th>Downstream Microservice</th>
+          <th>Downstream Port</th>
+          <th>Supported Methods</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>/api/master/*</code></td>
+          <td>StyleBook.MasterData.Api</td>
+          <td>5001</td>
+          <td>GET, POST</td>
+        </tr>
+        <tr>
+          <td><code>/api/auth/*</code>, <code>/api/users/*</code></td>
+          <td>StyleBook.Identity.Api</td>
+          <td>5002</td>
+          <td>GET, POST, PUT</td>
+        </tr>
+        <tr>
+          <td><code>/api/salons/*</code>, <code>/api/branches/*</code>, <code>/api/stylists/*</code></td>
+          <td>StyleBook.Salon.Api</td>
+          <td>5003</td>
+          <td>GET, POST, PUT, DELETE</td>
+        </tr>
+        <tr>
+          <td><code>/api/bookings/*</code>, <code>/api/slots/*</code>, <code>/api/reviews/*</code></td>
+          <td>StyleBook.Booking.Api</td>
+          <td>5004</td>
+          <td>GET, POST, PUT</td>
+        </tr>
+        <tr>
+          <td><code>/api/marketing/*</code>, <code>/api/offers/*</code></td>
+          <td>StyleBook.Marketing.Api</td>
+          <td>5005</td>
+          <td>GET, POST</td>
+        </tr>
+        <tr>
+          <td><code>/api/billing/*</code>, <code>/api/wallets/*</code>, <code>/api/payouts/*</code></td>
+          <td>StyleBook.Billing.Api</td>
+          <td>5006</td>
+          <td>GET, POST, PUT</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Core C# Entity Definitions in StyleBook.Shared</h2>
+    <p>Domain entities are unified in <code>StyleBook.Shared.Domain.Entities</code> for EF Core:</p>
+    <pre><code>// Example: Booking Financial Split Model for Accounting
+namespace StyleBook.Shared.Domain.Entities
+{
+    public class BookingFinancialSplit
+    {
+        public Guid BookingId { get; set; }
+        public string PaymentMode { get; set; } = "ONLINE_ESCROW"; // or PAY_AT_SALON_CASH
+        public decimal GrossCustomerPaid { get; set; }
+        public decimal SalonDiscountAmount { get; set; }
+        public decimal PlatformCouponDiscount { get; set; }
+        public decimal NetServiceAmount { get; set; }
+        public decimal CommissionPercentage { get; set; }
+        public decimal PlatformCommissionAmount { get; set; }
+        public decimal PlatformCommissionGst { get; set; }
+        public decimal TdsWithheldAmount { get; set; }
+        public decimal OwnerNetPayable { get; set; }
+        public string SettlementStatus { get; set; } = "PENDING_COMPLETION";
+        public DateTime? SettledAt { get; set; }
+    }
+}</code></pre>
+
+    <h2>4. Web Frontend Architecture</h2>
+    <h3>4.1 Management Portal (`stylebook-management`)</h3>
+    <ul>
+      <li>Built with **React 18 + Vite** for instant HMR.</li>
+      <li>Contains viewports tailored to role:
+        <br>&bull; <em>Super Admin:</em> System health, master geographies, global pricing floor.
+        <br>&bull; <em>Zonal Manager:</em> Onboarding verification, branch approvals queue, compliance notices.
+        <br>&bull; <em>Finance Officer:</em> Subscriptions, commissions, wallet ledger, automated payout triggers.
+        <br>&bull; <em>Salon Owner:</em> Branch manager, stylist mapper, calendar roster, earnings ledger.
+      </li>
+    </ul>
+
+    <h3>4.2 Customer Portal (`stylebook-customer`)</h3>
+    <ul>
+      <li>Built with **Next.js 14 App Router** for server-side rendering and high SEO visibility.</li>
+      <li>Features landing page discovery with locality filters (Ramnad, Puduvalasai, Panaikulam, Sakkarakottai).</li>
+      <li>Two entry flows: Branch-First & Stylist-First.</li>
+      <li>Integrated slot reservation, coupon redemption, 6-digit OTP modal, and dual rating forms.</li>
+    </ul>
+  </div>
+</body>
+</html>

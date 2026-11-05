@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Comprehensive Business Flow, Monetization & Accounting Architecture</title>
+  <style>
+    :root {
+      --primary: #7c3aed;
+      --primary-light: #f5f3ff;
+      --primary-border: #ddd6fe;
+      --primary-dark: #5b21b6;
+      --secondary: #0d9488;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --success: #10b981;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.65;
+      color: var(--text-main);
+      background: var(--bg-page);
+      margin: 0;
+      padding: 30px 15px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      padding: 45px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-color);
+    }
+    .header-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      background: var(--primary-light);
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      border: 1px solid var(--primary-border);
+    }
+    h1 {
+      color: #0f172a;
+      font-size: 32px;
+      font-weight: 800;
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    h2 {
+      color: var(--primary-dark);
+      font-size: 22px;
+      margin-top: 40px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-left: 5px solid var(--primary);
+      padding-left: 14px;
+    }
+    h3 {
+      color: #1e293b;
+      font-size: 17px;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    p {
+      margin-top: 0;
+      margin-bottom: 14px;
+    }
+    .card {
+      background: #faf5ff;
+      border: 1px solid #e9d5ff;
+      border-radius: 10px;
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+    .card-teal {
+      background: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-radius: 10px;
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+    .card-warning {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 22px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-info { background: #e0f2fe; color: #075985; }
+    .badge-purple { background: #f3e8ff; color: #6b21a8; }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0 26px 0;
+      font-size: 14px;
+    }
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 600;
+      text-align: left;
+      padding: 12px 14px;
+      border: 1px solid var(--border-color);
+    }
+    td {
+      padding: 12px 14px;
+      border: 1px solid var(--border-color);
+      vertical-align: top;
+    }
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .highlight-row {
+      background: #faf5ff !important;
+      font-weight: 600;
+    }
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.5;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+    }
+    code {
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 860px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .container { padding: 20px; }
+    }
+    .plan-card {
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 22px;
+      background: #ffffff;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .plan-card.featured {
+      border-color: var(--primary);
+      background: #fcfaff;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12);
+    }
+    .plan-price {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      margin: 12px 0;
+    }
+    .plan-features {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+      text-align: left;
+      font-size: 13px;
+    }
+    .plan-features li {
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border-color);
+    }
+    .plan-features li::before {
+      content: "✓ ";
+      color: var(--success);
+      font-weight: bold;
+    }
+    .formula-box {
+      background: #1e1e2e;
+      color: #a6accd;
+      padding: 16px 20px;
+      border-radius: 8px;
+      font-family: Consolas, monospace;
+      margin: 14px 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .formula-box span.kw { color: #89ddff; font-weight: bold; }
+    .formula-box span.val { color: #f78c6c; }
+    .formula-box span.res { color: #c3e88d; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-badge">StyleBook Platform Specification & Architecture</div>
+    <h1>Comprehensive Business Requirements & Accounting Specification</h1>
+    <div class="subtitle">
+      Analysis, Flow Validation, Multi-Scope Governance, and Full Accounting Architecture (SaaS Membership + Booking Commission Model)
+    </div>
+
+    <!-- Section 1 -->
+    <h2>1. Executive Summary & Flow Verification</h2>
+    <div class="card">
+      <p>Your platform requirements for <strong>StyleBook</strong> establish a complete marketplace ecosystem connecting <strong>Management</strong>, <strong>Salon Owners (Sellers)</strong>, and <strong>Customers (Buyers)</strong>. The platform is not sold as standalone individual salon software; it functions as a <strong>multi-tenant marketplace with membership subscriptions and transaction commissions</strong>.</p>
+      
+      <p><strong>Flow Verification Result:</strong> The foundational user hierarchy is conceptually sound, but requires three major operational adjustments to be production-ready:</p>
+      <ol>
+        <li><strong>Role Segregation within Management:</strong> Instead of one person holding all management permissions, responsibilities are cleanly bifurcated into <em>Operational Admins</em> (geography, branch approvals, notices) and <em>Finance Officers</em> (commissions, wallet settlements, tax, payouts).</li>
+        <li><strong>Strict Approval State Machines:</strong> When an owner modifies services, pricing, or creates a new branch, it cannot go live immediately. It enters a <code>PENDING_REVIEW</code> state until approved by the territorial Zonal Manager.</li>
+        <li><strong>Double-Entry Accounting & Escrow Protection:</strong> To support both Online payments and Pay-at-Salon cash appointments, the platform must maintain an escrow engine and a pre-funded owner wallet mechanism to guarantee commission collection on cash appointments.</li>
+      </ol>
+    </div>
+
+    <!-- Section 2 -->
+    <h2>2. Multi-Role Hierarchy & Scoped Governance</h2>
+    <div class="grid-3">
+      <div class="card" style="margin-bottom:0;">
+        <h3>1. Management Tier</h3>
+        <p><span class="badge badge-purple">Super Admin / Zonal / Finance</span></p>
+        <p style="font-size: 13px;">Territory-scoped management with functional separation:</p>
+        <ul style="font-size: 13px; padding-left: 18px;">
+          <li><strong>Super Admin:</strong> Platform rules, countries, base pricing limits.</li>
+          <li><strong>Zonal Manager:</strong> Territory approvals (State/Zone/District), inspections, compliance notices.</li>
+          <li><strong>Finance Officer:</strong> Membership plans, commission rates, escrow audit, automated bank payouts.</li>
+        </ul>
+      </div>
+
+      <div class="card" style="margin-bottom:0;">
+        <h3>2. Salon Owners (Sellers)</h3>
+        <p><span class="badge badge-teal" style="background:#ccfbf1; color:#0f766e;">Chains & Independents</span></p>
+        <p style="font-size: 13px;">Registered salon enterprises & solo specialists:</p>
+        <ul style="font-size: 13px; padding-left: 18px;">
+          <li><strong>Enterprise Chains:</strong> Multiple physical branches, stylist transfers, branch POCs.</li>
+          <li><strong>Independent Salons:</strong> Single storefront, local staff, custom timings.</li>
+          <li><strong>Solo Doorstep Pros:</strong> Mobile beauticians with geofenced delivery radius.</li>
+          <li><em>Requires approval before going live.</em></li>
+        </ul>
+      </div>
+
+      <div class="card" style="margin-bottom:0;">
+        <h3>3. End Customers (Buyers)</h3>
+        <p><span class="badge badge-info">Verified Consumers</span></p>
+        <p style="font-size: 13px;">Full self-service discovery and booking:</p>
+        <ul style="font-size: 13px; padding-left: 18px;">
+          <li>Search by Locality, Service, Branch, or Stylist.</li>
+          <li>Real-time slot reservation with 8-min cart hold.</li>
+          <li>Self-service Reschedule & Cancellation engine.</li>
+          <li>Fraud-proof 6-digit OTP verification at check-in.</li>
+          <li>Dual review system (Branch + Stylist).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Section 3 -->
+    <h2>3. Scoped Notice & Announcement Broadcast Engine</h2>
+    <p>Management can broadcast updates, health regulations, or promotional campaigns targeting specific scopes:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Target Audience</th>
+          <th>Geographic / Business Scope</th>
+          <th>Delivery Channel</th>
+          <th>Enforcement Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-purple">Salon Owners</span></td>
+          <td>Specific Zone (e.g., South Zone - Ramanathapuram)</td>
+          <td>Management Portal Banner & Push Alert</td>
+          <td><strong>Informational:</strong> New GST rate guidelines or local holiday schedules.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-purple">Specific Salon / Branch</span></td>
+          <td>Single Branch Entity</td>
+          <td>Compliance Audit Tab</td>
+          <td><strong>Mandatory Action (48hr):</strong> Hygiene violation or pricing dispute notice with reply required.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-teal">Stylists</span></td>
+          <td>All Stylists in District</td>
+          <td>Mobile Stylist App</td>
+          <td><strong>Operational:</strong> Grooming tool sanitization directives and shift guidelines.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-info">Customers</span></td>
+          <td>Locality / Pin Code (e.g., Puduvalasai, Panaikulam)</td>
+          <td>Customer Web & App Home Screen</td>
+          <td><strong>Marketing:</strong> Monsoon hair spa discount or new festival seasonal offers.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Section 4 -->
+    <h2>4. Commercial Monetization: SaaS Membership + Booking Commission</h2>
+    <p>StyleBook does not sell standalone software copies. It operates as a <strong>continuous revenue engine</strong> combining monthly SaaS memberships with per-booking transaction take-rates:</p>
+
+    <div class="grid-3">
+      <!-- Plan 1 -->
+      <div class="plan-card">
+        <h3>Starter Solo</h3>
+        <div class="plan-price">₹799 <span style="font-size: 14px; color: #64748b;">/month</span></div>
+        <p style="font-size: 13px; color: #64748b;">Tailored for independent barbers & solo doorstep beauticians.</p>
+        <ul class="plan-features">
+          <li>1 Physical Branch / Home Studio</li>
+          <li>Up to 2 Stylists</li>
+          <li>In-Salon + Doorstep enabled</li>
+          <li>Standard Marketplace Search</li>
+          <li><strong>12% Platform Booking Commission</strong></li>
+          <li>Email Support</li>
+        </ul>
+      </div>
+
+      <!-- Plan 2 -->
+      <div class="plan-card featured">
+        <span class="badge badge-purple" style="margin-bottom: 8px;">Most Popular</span>
+        <h3>Pro Growth</h3>
+        <div class="plan-price">₹2,499 <span style="font-size: 14px; color: #64748b;">/month</span></div>
+        <p style="font-size: 13px; color: #64748b;">For established single & double-branch salons.</p>
+        <ul class="plan-features">
+          <li>Up to 3 Branches</li>
+          <li>Up to 10 Stylists</li>
+          <li>In-Salon + Doorstep enabled</li>
+          <li>Verified "Top Rated" Badge</li>
+          <li><strong>8% Platform Booking Commission</strong></li>
+          <li>Priority WhatsApp / Phone Support</li>
+        </ul>
+      </div>
+
+      <!-- Plan 3 -->
+      <div class="plan-card">
+        <h3>Enterprise Chain</h3>
+        <div class="plan-price">₹5,999 <span style="font-size: 14px; color: #64748b;">/month</span></div>
+        <p style="font-size: 13px; color: #64748b;">For multi-branch regional brands (e.g., Naturals, Royal Classic).</p>
+        <ul class="plan-features">
+          <li>Unlimited Branches</li>
+          <li>Unlimited Stylists</li>
+          <li>Homepage Top Banner Carousel</li>
+          <li>Multi-Branch Stylist Transfers</li>
+          <li><strong>5% Platform Booking Commission</strong></li>
+          <li>Dedicated Key Account Manager</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Section 5 -->
+    <h2>5. Full Double-Entry Accounting & Wallet System</h2>
+    <div class="card-teal">
+      <h3>The Financial Workflow: Online vs. Pay-at-Salon Cash</h3>
+      <p>A major challenge in salon marketplaces is securing platform commissions when customers pay cash directly at the counter. StyleBook solves this through a dual-mode ledger:</p>
+
+      <div class="grid-2">
+        <div style="background: #ffffff; padding: 18px; border-radius: 8px; border: 1px solid #ccfbf1;">
+          <h4 style="margin-top:0; color: #0f766e;">Case A: Customer Pays Online</h4>
+          <ol style="font-size: 13px; padding-left: 18px;">
+            <li>Customer pays ₹1,000 via UPI/Card.</li>
+            <li>Funds held in <strong>StyleBook Platform Escrow</strong>.</li>
+            <li>Booking completed via 6-digit OTP.</li>
+            <li>Platform auto-splits:
+              <br>• <strong>₹882</strong> credited to Owner Virtual Ledger.
+              <br>• <strong>₹100</strong> Platform Commission (10%).
+              <br>• <strong>₹18</strong> GST on Commission (18%).
+            </li>
+            <li>Owner receives scheduled bank payout (T+3).</li>
+          </ol>
+        </div>
+
+        <div style="background: #ffffff; padding: 18px; border-radius: 8px; border: 1px solid #ccfbf1;">
+          <h4 style="margin-top:0; color: #0f766e;">Case B: Customer Pays Cash at Salon</h4>
+          <ol style="font-size: 13px; padding-left: 18px;">
+            <li>Customer hands ₹1,000 cash to the barber.</li>
+            <li>Barber verifies OTP to complete booking.</li>
+            <li>Platform deducts commission from <strong>Owner Prepaid Wallet</strong>:
+              <br>• Wallet debited <strong>-₹118</strong> (₹100 Commission + ₹18 GST).
+            </li>
+            <li><strong>Negative Balance Safety Gate:</strong> If owner wallet falls below -₹2,000, new online bookings are paused until wallet is topped up.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="formula-box">
+        <span class="kw">Financial Split Breakdown (Example: ₹1,000 Booking with 10% Commission):</span><br>
+        Gross Booking Total: <span class="val">₹1,000.00</span><br>
+        Platform Commission (10%): <span class="val">₹100.00</span><br>
+        GST on Commission (18% of ₹100): <span class="val">₹18.00</span><br>
+        Net Owner Payable: <span class="res">₹882.00</span>
+      </div>
+    </div>
+
+    <!-- Section 6 -->
+    <h2>6. Rescheduling, Cancellation & Refund Policies</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Time Before Appointment</th>
+          <th>Customer Refund</th>
+          <th>Cancellation Fee</th>
+          <th>Owner Compensation</th>
+          <th>Platform Retained</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>&gt; 12 Hours</strong></td>
+          <td><span class="badge badge-success">100% Full Refund</span></td>
+          <td>₹0 (0%)</td>
+          <td>₹0</td>
+          <td>₹0</td>
+        </tr>
+        <tr>
+          <td><strong>4 to 12 Hours</strong></td>
+          <td><span class="badge badge-info">80% Refund</span></td>
+          <td>20% Fee</td>
+          <td>15% to Salon</td>
+          <td>5% Admin Fee</td>
+        </tr>
+        <tr>
+          <td><strong>1 to 4 Hours</strong></td>
+          <td><span class="badge badge-warning">50% Refund</span></td>
+          <td>50% Fee</td>
+          <td>40% to Salon</td>
+          <td>10% Admin Fee</td>
+        </tr>
+        <tr>
+          <td><strong>&lt; 1 Hour / No Show</strong></td>
+          <td><span class="badge" style="background:#fee2e2; color:#991b1b;">0% (No Refund)</span></td>
+          <td>100% Fee</td>
+          <td>85% (Protects Stylist Wages)</td>
+          <td>15% Commission</td>
+        </tr>
+        <tr>
+          <td><strong>Cancelled by Salon</strong></td>
+          <td><span class="badge badge-success">100% + ₹100 Apology Credit</span></td>
+          <td>₹0</td>
+          <td>Salon penalized ₹100</td>
+          <td>₹0</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Section 7 -->
+    <h2>7. Real-Time Scenarios & Edge Case Solutions</h2>
+    <div class="card-warning">
+      <h3>Operational Resilience Matrix</h3>
+      <ul>
+        <li><strong>Stylist Sudden Sickness / Emergency Leave:</strong>
+          <br>System activates the <em>Emergency Reassignment Pipeline</em>. It queries all certified available stylists at the branch and reassigns with 1-click customer confirmation, or issues an instant full refund + apology credit if no staff member is free.
+        </li>
+        <li><strong>Doorstep Commute Buffer & Live Tracking:</strong>
+          <br>Doorstep bookings automatically inject a mandatory <strong>30-minute travel buffer</strong> between appointments. If stylist's GPS indicates travel delay, an automated ETA slip notification is dispatched to the customer.
+        </li>
+        <li><strong>Simultaneous Slot Booking Race Conditions:</strong>
+          <br>When a customer reaches checkout, the chosen slot is placed under an <strong>8-minute atomic cart lock</strong> in Redis/PostgreSQL. If payment is not completed within 8 minutes, the slot is immediately released to the public pool.
+        </li>
+        <li><strong>Service Chaining for Multi-Service Appointments:</strong>
+          <br>When customer selects Haircut (30m) + Beard Trim (15m) + Facial (45m), the engine requires a continuous 90-minute block for a single stylist, rather than splitting across disjointed times.
+        </li>
+      </ul>
+    </div>
+
+    <!-- Section 8 -->
+    <h2>8. Complete System Architecture & Implementation Roadmap</h2>
+    <pre><code>PROPOSED NEW SCHEMAS & SERVICES:
+1. Master Schema:       master.countries, states, zones, districts, services, categories
+2. Identity Schema:     identity.users, roles, permissions, territory_allocations
+3. Salon Schema:        salon.salons, branches, stylist_profiles, branch_pricing, entity_approvals
+4. Booking Schema:      booking.bookings, booking_items, booking_otps, reschedule_history, cancellation_records
+5. Billing Schema:      billing.membership_plans, owner_subscriptions, subscription_invoices
+6. Accounting Schema:   accounting.owner_wallets, wallet_transactions, booking_financial_splits, payout_batches
+7. Marketing Schema:    marketing.offers, announcements, compliance_notices</code></pre>
+
+    <div style="text-align: center; margin-top: 35px; padding-top: 20px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 13px;">
+      StyleBook Enterprise Salon Management Platform &bull; Architecture Specification Document v2.0
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Initial Setup & First-Time Run Guide</title>
+  <style>
+    :root {
+      --primary: #7c3aed; --primary-light: #f5f3ff; --primary-dark: #5b21b6;
+      --text: #0f172a; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0;
+      --success: #10b981;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text); background: var(--bg); margin: 0; padding: 30px 15px; }
+    .container { max-width: 1200px; margin: 0 auto; background: var(--card); padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
+    h2 { color: var(--primary-dark); font-size: 20px; margin-top: 32px; border-left: 4px solid var(--primary); padding-left: 10px; }
+    h3 { color: #1e293b; font-size: 16px; margin-top: 20px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; font-family: Consolas, monospace; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 5px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th { background: #f1f5f9; color: #334155; text-align: left; padding: 10px; border: 1px solid var(--border); }
+    td { padding: 10px; border: 1px solid var(--border); }
+    .step-badge { display: inline-block; width: 26px; height: 26px; background: var(--primary); color: #fff; text-align: center; line-height: 26px; border-radius: 50%; font-weight: bold; margin-right: 8px; font-size: 13px; }
+    .card { background: var(--primary-light); border: 1px solid #ddd6fe; border-radius: 8px; padding: 18px; margin-bottom: 18px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - Initial Setup & First-Time Run Guide v2.0</h1>
+    <p>Zero-to-Hero Quickstart: Database Seeding, One-Click Orchestration, Demo Accounts & Walkthrough Script</p>
+
+    <h2>1. Step-by-Step Initial Environment Setup</h2>
+
+    <h3><span class="step-badge">1</span> Verify Prerequisites</h3>
+    <p>Open a PowerShell terminal and verify that .NET 8, Node.js, and PostgreSQL are installed:</p>
+    <pre><code>dotnet --version      # Expected: 8.0.x
+node -v               # Expected: v18.x or v20.x
+psql -U postgres -c "SELECT version();"</code></pre>
+
+    <h3><span class="step-badge">2</span> Create and Seed Database</h3>
+    <p>Create the <code>stylebook_db</code> database in PostgreSQL and run the seed script:</p>
+    <pre><code># Open PostgreSQL command line
+psql -U postgres -c "CREATE DATABASE stylebook_db;"
+
+# Execute initialization and seed script
+psql -U postgres -d stylebook_db -f "C:\Users\ayesh\Desktop\Mahathir\Projects\StyleBook\database\init.sql"</code></pre>
+
+    <h3><span class="step-badge">3</span> Restore Dependencies</h3>
+    <pre><code># Restore .NET Solution
+cd C:\Users\ayesh\Desktop\Mahathir\Projects\StyleBook
+dotnet restore StyleBook.sln
+
+# Install Management Portal packages
+cd src\Web\stylebook-management
+npm install
+
+# Install Customer Web packages
+cd ..\stylebook-customer
+npm install</code></pre>
+
+    <h3><span class="step-badge">4</span> Launch All Services via Orchestration Script</h3>
+    <p>Run the automated batch script to launch the Gateway, all microservices, and both web frontends in separate console windows:</p>
+    <pre><code>cd C:\Users\ayesh\Desktop\Mahathir\Projects\StyleBook
+.\run-all.bat</code></pre>
+    <p>Wait approximately 15 seconds for all services to initialize. You will see green status messages confirming healthy ports.</p>
+
+    <h2>2. Seeded Test Accounts Registry</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>User Role</th>
+          <th>Username</th>
+          <th>Phone / Identity</th>
+          <th>Territorial / Business Scope</th>
+          <th>Default Password</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Super Admin</strong></td>
+          <td><code>superadmin</code></td>
+          <td>+919876543210</td>
+          <td>Global Master (All Countries, States & Brands)</td>
+          <td><code>Admin@12345</code></td>
+        </tr>
+        <tr>
+          <td><strong>Zonal Manager</strong></td>
+          <td><code>zonal_ramnad</code></td>
+          <td>+919842100002</td>
+          <td>South Zone - Ramanathapuram (Ramnad, Puduvalasai, Panaikulam)</td>
+          <td><code>Zone@12345</code></td>
+        </tr>
+        <tr>
+          <td><strong>Salon Shop Owner</strong></td>
+          <td><code>owner_royalclassic</code></td>
+          <td>+919842100004</td>
+          <td>Royal Classic Chain (Ramnad Town & Puduvalasai Branches)</td>
+          <td><code>Owner@12345</code></td>
+        </tr>
+        <tr>
+          <td><strong>Independent Owner</strong></td>
+          <td><code>kavitha_beauty</code></td>
+          <td>+919842100005</td>
+          <td>Kavitha Doorstep Studio (Doorstep & Bridal across Ramnad)</td>
+          <td><code>Owner@12345</code></td>
+        </tr>
+        <tr>
+          <td><strong>Senior Stylist</strong></td>
+          <td><code>karthik_stylist</code></td>
+          <td>+919842100007</td>
+          <td>Royal Classic - Ramnad Town Branch (Hair Care Specialist)</td>
+          <td><code>Stylist@12345</code></td>
+        </tr>
+        <tr>
+          <td><strong>Customer</strong></td>
+          <td><code>customer_anand</code></td>
+          <td>+919842100009</td>
+          <td>Customer based in Ramnad Town (Buyer)</td>
+          <td><code>Customer@12345</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. First-Time Walkthrough Script (Verifying the Complete Flow)</h2>
+    <div class="card">
+      <h3>Phase 1: Inspection & Approval as Zonal Manager</h3>
+      <ol>
+        <li>Open browser at <code>http://localhost:3000</code>.</li>
+        <li>Login using <code>zonal_ramnad</code> / <code>Zone@12345</code>.</li>
+        <li>Navigate to <strong>"Pending Salons"</strong> tab. You will see <em>"Sakkarakottai Heritage Salon"</em> under review.</li>
+        <li>Click <strong>"Review Documents & Approve"</strong>. The salon immediately transitions to <code>Approved</code> and becomes live on the marketplace.</li>
+      </ol>
+
+      <h3>Phase 2: Booking an Appointment as Customer</h3>
+      <ol>
+        <li>Open <code>http://localhost:3001</code> in a new browser window.</li>
+        <li>Browse trending salons in Ramanathapuram or filter by locality chip <strong>"Ramnad Town"</strong>.</li>
+        <li>Click on <strong>"Royal Classic Unisex Salon & Spa"</strong> &rarr; Select <strong>"Haircut & Styling"</strong> (₹200) + <strong>"Herbal Hair Spa"</strong> (₹700).</li>
+        <li>Select Stylist <strong>"Karthik Raja"</strong> & choose a tomorrow slot at <strong>11:00 AM</strong>.</li>
+        <li>Apply promo code <code>RAMNAD50</code> for flat ₹50 OFF. Net payable = ₹850.</li>
+        <li>Choose <strong>"Pay at Salon (Cash)"</strong> or <strong>"Pay Online"</strong> and confirm.</li>
+        <li>The system displays your booking confirmation with a secure **6-digit Arrival OTP** (e.g. <code>849201</code>).</li>
+      </ol>
+
+      <h3>Phase 3: Arrival Check-In & Service Completion</h3>
+      <ol>
+        <li>Switch back to the Management app at <code>http://localhost:3000</code>.</li>
+        <li>Switch user / login as <code>karthik_stylist</code> or <code>owner_royalclassic</code>.</li>
+        <li>Navigate to <strong>"Today's Appointments"</strong>. Find the booking reference.</li>
+        <li>Click <strong>"Verify OTP & Start Service"</strong> & enter <code>849201</code>.</li>
+        <li>Status updates to <code>In-Progress</code>. Upon completion, click <strong>"Complete Appointment"</strong>.</li>
+        <li>The system auto-calculates commission:
+          <br>&bull; Debits commission from Owner Wallet if cash, or credits net earnings to Owner Ledger if online.
+        </li>
+      </ol>
+
+      <h3>Phase 4: Customer Review Submission</h3>
+      <ol>
+        <li>Refresh the Customer page at <code>http://localhost:3001</code> under <strong>"My Bookings"</strong>.</li>
+        <li>Click <strong>"Leave Review"</strong>.</li>
+        <li>Submit 5 stars for the Branch and 5 stars for Stylist Karthik with written feedback.</li>
+        <li>Verify that the rating updates dynamically on the public salon and stylist profiles.</li>
+      </ol>
+    </div>
+  </div>
+</body>
+</html>

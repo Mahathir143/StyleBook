@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Comprehensive Software Requirements Specification (SRS)</title>
+  <style>
+    :root {
+      --primary: #7c3aed; --primary-light: #f5f3ff; --primary-dark: #5b21b6;
+      --secondary: #0d9488; --accent: #f59e0b; --danger: #ef4444; --success: #10b981;
+      --text: #0f172a; --muted: #475569; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text); background: var(--bg); margin: 0; padding: 30px 15px; }
+    .container { max-width: 1200px; margin: 0 auto; background: var(--card); padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
+    h2 { color: var(--primary-dark); font-size: 20px; margin-top: 32px; border-left: 4px solid var(--primary); padding-left: 10px; }
+    h3 { color: #1e293b; font-size: 16px; margin-top: 20px; }
+    .card { background: var(--primary-light); border: 1px solid #ddd6fe; border-radius: 8px; padding: 18px; margin-bottom: 18px; }
+    .badge { display: inline-block; padding: 3px 8px; font-size: 11px; font-weight: 700; border-radius: 4px; text-transform: uppercase; }
+    .badge-p { background: #ede9fe; color: var(--primary-dark); }
+    .badge-s { background: #dcfce7; color: #166534; }
+    .badge-w { background: #fef3c7; color: #92400e; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px 0; font-size: 14px; }
+    th { background: #f1f5f9; color: #334155; text-align: left; padding: 10px 12px; border: 1px solid var(--border); }
+    td { padding: 10px 12px; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) { background: #f8fafc; }
+    pre { background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 6px; overflow-x: auto; font-size: 13px; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 5px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - Software Requirements Specification (SRS) v2.0</h1>
+    <p><strong>Project:</strong> StyleBook Enterprise Salon & On-Demand Grooming Platform &bull; <strong>Scope:</strong> Multi-Tenant Marketplace with SaaS Membership & Booking Commission Model</p>
+
+    <h2>1. Executive Product Vision & Core Actors</h2>
+    <div class="card">
+      <p>StyleBook is not sold as standalone individual salon software. It operates as an on-demand, regional, multi-tenant grooming marketplace connecting three core user groups:</p>
+      <ul>
+        <li><strong>1. Management (Platform Administrators & Operators):</strong> Manages platform compliance, regional onboarding approvals, marketing announcements, territorial pricing boundaries, membership plans, commission structures, and financial payout reconciliations.</li>
+        <li><strong>2. Salon Owners (Sellers / Service Providers):</strong> Can be multi-branch salon enterprises, standalone boutiques, or independent solo/mobile stylists. They configure branches, styler rosters, service catalogs, custom pricing, and shift timings. All branches and services must be approved by Management before going live.</li>
+        <li><strong>3. Customers (Buyers / Consumers):</strong> Self-service appointment discovery (by locality, brand, stylist, or service), real-time booking with 8-minute cart locks, rescheduling, cancellation with refund preview, 6-digit OTP verification at check-in, and dual review submission.</li>
+      </ul>
+    </div>
+
+    <h2>2. Functional Role Separation & Scoped Governance</h2>
+    <p>Instead of a single administrator having omnipotent control, StyleBook separates administrative tasks functionally and territorially:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Administrative Scope</th>
+          <th>Functional Responsibilities</th>
+          <th>Permissions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Super Admin</strong></td>
+          <td>Global Platform</td>
+          <td>Master countries, global platform policies, baseline price ceilings, master service categories.</td>
+          <td>Full Read/Write across all tenants and ledgers.</td>
+        </tr>
+        <tr>
+          <td><strong>Zonal / Regional Manager</strong></td>
+          <td>Assigned State / Zone / District</td>
+          <td>Onboarding inspection, salon verification, branch approvals, staff sanitation audits, compliance notices.</td>
+          <td>Approve/Reject Salons & Branches in Zone; Toggle Active/DeActive; Issue 48hr compliance notices.</td>
+        </tr>
+        <tr>
+          <td><strong>Finance & Accounts Manager</strong></td>
+          <td>Regional / Platform Financials</td>
+          <td>Membership plan setup, commission rate overrides, escrow balance audits, payout batch execution, GST tax invoices.</td>
+          <td>Manage Wallets, Approve Bank Payouts, Audit Disputes, Withhold TDS under Section 194-O.</td>
+        </tr>
+        <tr>
+          <td><strong>Brand Manager</strong></td>
+          <td>Assigned Enterprise Brand (e.g. Royal Classic)</td>
+          <td>Multi-branch oversight, staff transfers between branches, enterprise promotional campaign creation.</td>
+          <td>Cross-branch reporting and aggregate staff roster management.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Targeted Announcement & Notice System</h2>
+    <p>Management can broadcast announcements and notices filtered by granular target criteria:</p>
+    <ul>
+      <li><strong>Target Audiences:</strong> <code>MANAGEMENT</code>, <code>SALON_OWNER</code>, <code>BRANCH_MANAGER</code>, <code>STYLIST</code>, <code>CUSTOMER</code>.</li>
+      <li><strong>Targeting Scope:</strong> Global &bull; Country &bull; State &bull; Zone &bull; District &bull; Locality &bull; Specific Brand &bull; Single Branch.</li>
+      <li><strong>Notice Types:</strong>
+        <ul>
+          <li><em>Informational:</em> Platform updates, new features, seasonal announcements.</li>
+          <li><em>Regulatory / Compliance:</em> Sanitation audit directive, pricing policy warning, unverified staff flag (carries 48-hour grace period with mandatory owner acknowledgment).</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h2>4. Salon Owner Lifecycle & Strict Approval Workflow</h2>
+    <div class="card">
+      <h3>4.1 Business Models Supported</h3>
+      <ol>
+        <li><strong>Multi-Branch Salon Chains:</strong> Central owner account with distributed branch physical stores and centralized billing.</li>
+        <li><strong>Independent Standalone Salons:</strong> Single storefront, local staff, custom operating hours.</li>
+        <li><strong>Independent Freelance / Doorstep Stylists:</strong> Mobile beauticians with no storefront, operating exclusively within a defined kilometer radius (e.g., 10–15 km around Ramanathapuram, Puduvalasai, Panaikulam).</li>
+      </ol>
+      <h3>4.2 Approval Gate State Machine</h3>
+      <p>Owners can draft their branches, configure service pricing, and map stylists at any time. However, the system enforces:</p>
+      <code>Entity Status: Draft &rarr; Pending_Approval &rarr; Zonal Inspection &rarr; Approved &rarr; Live on Marketplace</code>
+      <p>If an owner changes a branch address, toggles doorstep eligibility, or onboard a new stylist, the modification enters an approval queue in the Zonal Manager's dashboard before reflecting on the public customer app.</p>
+    </div>
+
+    <h2>5. Customer Appointment Engine Requirements</h2>
+    <h3>5.1 Discovery & Search Relational Matrix</h3>
+    <ul>
+      <li><strong>Branch-First Flow:</strong> Customer picks Branch &rarr; Only services offered at that branch display &rarr; Only stylists stationed at that branch certified for the service display (plus <em>"Any Available Stylist"</em> option).</li>
+      <li><strong>Stylist-First Flow:</strong> Customer picks Stylist &rarr; Only services that stylist is certified to perform display &rarr; Only branches where that stylist works display (plus Doorstep option if enabled).</li>
+      <li><strong>Doorstep Validation:</strong> Both the service must be marked <code>is_doorstep_eligible = true</code> and the stylist/branch must have <code>is_doorstep_enabled = true</code> within the customer's delivery locality.</li>
+    </ul>
+
+    <h3>5.2 Slot Reservation & Concurrency</h3>
+    <ul>
+      <li><strong>Atomic Cart Hold:</strong> Upon slot selection, the engine locks the time slot for **8 minutes**. If checkout is not completed within 8 minutes, the lock expires and slot returns to public availability.</li>
+      <li><strong>Sequential Duration Chaining:</strong> Multiple services booked in one cart (e.g., Haircut 30m + Beard Trim 15m) are dynamically chained into a continuous 45m block.</li>
+      <li><strong>Doorstep Commute Buffer:</strong> Doorstep bookings automatically add a mandatory **30-minute travel buffer** before and after the appointment slot.</li>
+    </ul>
+
+    <h3>5.3 Reschedule & Cancellation Policy Engine</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Time Window</th>
+          <th>Customer Policy</th>
+          <th>Salon Compensation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Reschedule</strong></td>
+          <td>&ge; 2 Hours prior</td>
+          <td>Allowed up to 2 times within 14 calendar days. Price difference adjusted.</td>
+          <td>Slot re-opened immediately on salon calendar.</td>
+        </tr>
+        <tr>
+          <td><strong>Cancellation</strong></td>
+          <td>&gt; 12 Hours prior</td>
+          <td>100% Full Refund.</td>
+          <td>No fee; slot available for new bookings.</td>
+        </tr>
+        <tr>
+          <td><strong>Cancellation</strong></td>
+          <td>4 to 12 Hours prior</td>
+          <td>80% Refund (20% cancellation fee).</td>
+          <td>15% paid to Salon to cover reserved slot loss.</td>
+        </tr>
+        <tr>
+          <td><strong>Cancellation</strong></td>
+          <td>1 to 4 Hours prior</td>
+          <td>50% Refund (50% cancellation fee).</td>
+          <td>40% paid to Salon to cover idle staff time.</td>
+        </tr>
+        <tr>
+          <td><strong>Cancellation</strong></td>
+          <td>&lt; 1 Hour / No Show</td>
+          <td>0% Refund (100% forfeiture).</td>
+          <td>85% paid to Salon to safeguard barber wages.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>6. Commercial Monetization & Double-Entry Accounting Requirements</h2>
+    <div class="card">
+      <h3>6.1 Dual Revenue Engine</h3>
+      <ol>
+        <li><strong>Owner SaaS Membership Plans:</strong>
+          <br>&bull; <em>Starter Solo:</em> ₹799/month (1 branch, 2 stylists, 12% booking commission)
+          <br>&bull; <em>Pro Growth:</em> ₹2,499/month (up to 3 branches, 10 stylists, 8% booking commission)
+          <br>&bull; <em>Enterprise Chain:</em> ₹5,999/month (unlimited branches & stylists, 5% booking commission)
+        </li>
+        <li><strong>Platform Booking Commission:</strong> Tiered take-rate deducted automatically on completed bookings.</li>
+      </ol>
+      <h3>6.2 Cash-At-Salon Protection via Pre-Funded Security Wallets</h3>
+      <p>When customers choose <strong>Pay-at-Salon (Cash)</strong>, the salon receives 100% of the funds in hand. The platform automatically debits the commission + 18% GST from the <strong>Owner's Prepaid Security Wallet</strong>. If an owner's balance drops below <code>negative_credit_limit</code> (-₹2,000), booking acceptance is paused until topped up.</p>
+      <h3>6.3 Double-Entry Ledger & Payouts</h3>
+      <p>Online payments are held in Platform Escrow. Upon 6-digit OTP verification at check-in, funds are released to the Owner Virtual Ledger. Bi-weekly automated payouts transfer settled funds directly to the owner's bank account via IMPS/NEFT with 1% TDS withheld under Section 194-O.</p>
+    </div>
+
+    <h2>7. Dual Rating & Feedback Integrity</h2>
+    <ul>
+      <li>Allowed only after appointment status reaches <code>Completed</code>.</li>
+      <li>Requires two independent 1–5 star ratings:
+        <br>1. <strong>Salon Branch Rating:</strong> Ambience, cleanliness, equipment hygiene, waiting time.
+        <br>2. <strong>Stylist Rating:</strong> Cutting skill, friendliness, attentiveness, styling finish.
+      </li>
+      <li>Database enforces <code>UNIQUE(booking_id)</code> to eliminate fake or duplicate reviews.</li>
+      <li>Owners can post official verified responses to customer reviews.</li>
+    </ul>
+  </div>
+</body>
+</html>

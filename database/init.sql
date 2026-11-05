@@ -508,3 +508,188 @@ INSERT INTO marketing.offers (creator_type, creator_id, title, description, disc
 -- Seed Announcements
 INSERT INTO marketing.announcements (sender_user_id, salon_id, title, content, target_audience) VALUES 
 ('11111111-1111-1111-1111-111111111111', NULL, 'StyleBook Live in Ramanathapuram!', 'We are delighted to bring on-demand salon and doorstep grooming services to Ramnad Town, Puduvalasai, Panaikulam, and Sakkarakottai.', 'GLOBAL');
+
+
+-- =============================================================================
+-- 7. BILLING, SUBSCRIPTIONS & ACCOUNTING SCHEMA (2026 UPDATE)
+-- =============================================================================
+
+CREATE SCHEMA IF NOT EXISTS billing;
+CREATE SCHEMA IF NOT EXISTS accounting;
+
+-- -----------------------------------------------------------------------------
+-- 7.1 MEMBERSHIP PLANS & OWNER SUBSCRIPTIONS
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS billing.membership_plans (
+    id SERIAL PRIMARY KEY,
+    plan_code VARCHAR(50) UNIQUE NOT NULL, -- 'STARTER_SOLO', 'PRO_GROWTH', 'ENTERPRISE_CHAIN'
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    monthly_fee NUMERIC(10, 2) NOT NULL,
+    annual_fee NUMERIC(10, 2) NOT NULL,
+    max_branches INT NOT NULL DEFAULT 1,
+    max_stylists INT NOT NULL DEFAULT 2,
+    commission_rate_percent NUMERIC(5, 2) NOT NULL DEFAULT 10.00,
+    has_priority_listing BOOLEAN DEFAULT FALSE,
+    has_doorstep_enabled BOOLEAN DEFAULT TRUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS billing.owner_subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    salon_id UUID REFERENCES salon.salons(id) ON DELETE CASCADE,
+    plan_id INT REFERENCES billing.membership_plans(id),
+    billing_cycle VARCHAR(20) NOT NULL DEFAULT 'MONTHLY', -- 'MONTHLY', 'QUARTERLY', 'ANNUALLY'
+    amount_paid NUMERIC(10, 2) NOT NULL,
+    tax_amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE', -- 'TRIAL', 'ACTIVE', 'PAST_DUE', 'CANCELLED', 'EXPIRED'
+    start_date TIMESTAMPTZ NOT NULL,
+    end_date TIMESTAMPTZ NOT NULL,
+    next_billing_date TIMESTAMPTZ NOT NULL,
+    payment_method VARCHAR(50),
+    auto_renew BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
+-- 7.2 OWNER WALLET & DOUBLE-ENTRY LEDGER
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS accounting.owner_wallets (
+    salon_id UUID PRIMARY KEY REFERENCES salon.salons(id) ON DELETE CASCADE,
+    current_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    pending_clearance_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    security_deposit_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    negative_credit_limit NUMERIC(12, 2) NOT NULL DEFAULT -2000.00,
+    currency VARCHAR(10) NOT NULL DEFAULT 'INR',
+    is_payout_blocked BOOLEAN DEFAULT FALSE,
+    last_updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS accounting.wallet_transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    salon_id UUID REFERENCES salon.salons(id) ON DELETE CASCADE,
+    booking_id UUID REFERENCES booking.bookings(id) ON DELETE SET NULL,
+    transaction_type VARCHAR(50) NOT NULL, 
+    -- 'ONLINE_BOOKING_EARNING', 'CASH_BOOKING_COMMISSION_DEBIT', 
+    -- 'MEMBERSHIP_FEE_DEBIT', 'WALLET_TOPUP', 'BANK_PAYOUT', 'REFUND_CLAWBACK'
+    direction VARCHAR(10) NOT NULL, -- 'CREDIT', 'DEBIT'
+    amount NUMERIC(10, 2) NOT NULL,
+    balance_before NUMERIC(12, 2) NOT NULL,
+    balance_after NUMERIC(12, 2) NOT NULL,
+    description TEXT,
+    reference_number VARCHAR(100),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
+-- 7.3 BOOKING FINANCIAL SPLITS & SETTLEMENTS
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS accounting.booking_financial_splits (
+    booking_id UUID PRIMARY KEY REFERENCES booking.bookings(id) ON DELETE CASCADE,
+    payment_mode VARCHAR(30) NOT NULL, -- 'ONLINE_ESCROW', 'PAY_AT_SALON_CASH'
+    gross_customer_paid NUMERIC(10, 2) NOT NULL,
+    salon_discount_amount NUMERIC(10, 2) DEFAULT 0.00,
+    platform_coupon_discount NUMERIC(10, 2) DEFAULT 0.00,
+    net_service_amount NUMERIC(10, 2) NOT NULL,
+    commission_percentage NUMERIC(5, 2) NOT NULL,
+    platform_commission_amount NUMERIC(10, 2) NOT NULL,
+    platform_commission_gst NUMERIC(10, 2) NOT NULL,
+    tds_withheld_amount NUMERIC(10, 2) DEFAULT 0.00,
+    owner_net_payable NUMERIC(10, 2) NOT NULL,
+    settlement_status VARCHAR(50) DEFAULT 'PENDING_COMPLETION', 
+    -- 'PENDING_COMPLETION', 'AVAILABLE_FOR_PAYOUT', 'SETTLED', 'REFUNDED'
+    settled_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS accounting.payout_batches (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    batch_reference VARCHAR(50) UNIQUE NOT NULL,
+    salon_id UUID REFERENCES salon.salons(id),
+    total_amount NUMERIC(12, 2) NOT NULL,
+    bank_account_number VARCHAR(50) NOT NULL,
+    bank_ifsc VARCHAR(20) NOT NULL,
+    bank_account_holder VARCHAR(150) NOT NULL,
+    transfer_status VARCHAR(50) DEFAULT 'PROCESSING', -- 'PROCESSING', 'SUCCESS', 'FAILED'
+    utr_reference VARCHAR(100),
+    processed_by_admin UUID REFERENCES identity.users(id),
+    processed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
+-- 7.4 RESCHEDULING & CANCELLATION HISTORY
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS booking.reschedule_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    booking_id UUID REFERENCES booking.bookings(id) ON DELETE CASCADE,
+    previous_date DATE NOT NULL,
+    previous_start_time TIME NOT NULL,
+    new_date DATE NOT NULL,
+    new_start_time TIME NOT NULL,
+    previous_stylist_id UUID REFERENCES salon.stylist_profiles(id),
+    new_stylist_id UUID REFERENCES salon.stylist_profiles(id),
+    rescheduled_by_user_id UUID REFERENCES identity.users(id),
+    reason TEXT,
+    rescheduled_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS booking.cancellation_records (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    booking_id UUID UNIQUE REFERENCES booking.bookings(id) ON DELETE CASCADE,
+    cancelled_by_user_id UUID REFERENCES identity.users(id),
+    cancelled_by_role VARCHAR(50) NOT NULL, -- 'CUSTOMER', 'OWNER', 'MANAGEMENT'
+    reason TEXT NOT NULL,
+    cancellation_fee NUMERIC(10, 2) DEFAULT 0.00,
+    customer_refund_amount NUMERIC(10, 2) DEFAULT 0.00,
+    owner_compensation_amount NUMERIC(10, 2) DEFAULT 0.00,
+    refund_status VARCHAR(50) DEFAULT 'PENDING', -- 'PENDING', 'PROCESSED', 'FAILED'
+    refund_transaction_reference VARCHAR(100),
+    cancelled_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
+-- 7.5 BRANCH & SERVICE APPROVAL AUDIT LOG
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS salon.entity_approvals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_type VARCHAR(50) NOT NULL, -- 'BRANCH', 'SERVICE_MAPPING', 'STYLIST_ONBOARDING'
+    entity_id UUID NOT NULL,
+    salon_id UUID REFERENCES salon.salons(id) ON DELETE CASCADE,
+    requested_changes JSONB NOT NULL,
+    status VARCHAR(50) DEFAULT 'PENDING_REVIEW', -- 'PENDING_REVIEW', 'APPROVED', 'REJECTED'
+    reviewed_by_admin UUID REFERENCES identity.users(id),
+    rejection_reason TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    reviewed_at TIMESTAMPTZ
+);
+
+-- -----------------------------------------------------------------------------
+-- 7.6 SEED MEMBERSHIP PLANS & INITIAL WALLETS
+-- -----------------------------------------------------------------------------
+
+INSERT INTO billing.membership_plans (id, plan_code, name, description, monthly_fee, annual_fee, max_branches, max_stylists, commission_rate_percent, has_priority_listing, has_doorstep_enabled, is_active)
+VALUES
+(1, 'STARTER_SOLO', 'Starter Solo', 'Ideal for solo stylists, independent barbers & doorstep professionals', 799.00, 7990.00, 1, 2, 12.00, false, true, true),
+(2, 'PRO_GROWTH', 'Professional Growth', 'Designed for established high-traffic salons with up to 3 branches', 2499.00, 24990.00, 3, 10, 8.00, true, true, true),
+(3, 'ENTERPRISE_CHAIN', 'Enterprise Chain', 'Full suite for multi-branch luxury chains with priority placement', 5999.00, 59990.00, 999, 999, 5.00, true, true, true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Seed Subscriptions for Existing Salons
+INSERT INTO billing.owner_subscriptions (id, salon_id, plan_id, billing_cycle, amount_paid, tax_amount, status, start_date, end_date, next_billing_date)
+VALUES
+('s1111111-1111-1111-1111-111111111111', 'aaaa1111-aaaa-1111-aaaa-111111111111', 2, 'MONTHLY', 2499.00, 449.82, 'ACTIVE', NOW() - INTERVAL '10 days', NOW() + INTERVAL '20 days', NOW() + INTERVAL '20 days'),
+('s2222222-2222-2222-2222-222222222222', 'bbbb2222-bbbb-2222-bbbb-222222222222', 1, 'MONTHLY', 799.00, 143.82, 'ACTIVE', NOW() - INTERVAL '5 days', NOW() + INTERVAL '25 days', NOW() + INTERVAL '25 days')
+ON CONFLICT (id) DO NOTHING;
+
+-- Seed Wallets for Existing Salons
+INSERT INTO accounting.owner_wallets (salon_id, current_balance, pending_clearance_balance, security_deposit_balance, negative_credit_limit)
+VALUES
+('aaaa1111-aaaa-1111-aaaa-111111111111', 4500.00, 1200.00, 2000.00, -3000.00),
+('bbbb2222-bbbb-2222-bbbb-222222222222', 1850.00, 600.00, 1000.00, -1500.00)
+ON CONFLICT (salon_id) DO NOTHING;

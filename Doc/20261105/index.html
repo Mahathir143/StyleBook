@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook Documentation Hub (20261105 Release)</title>
+  <style>
+    :root {
+      --primary: #7c3aed; --primary-light: #f5f3ff; --primary-dark: #5b21b6;
+      --text: #0f172a; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0;
+      --secondary: #0d9488;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text); background: var(--bg); margin: 0; padding: 40px 20px; }
+    .container { max-width: 1100px; margin: 0 auto; background: var(--card); padding: 45px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+    h1 { color: #0f172a; font-size: 32px; font-weight: 800; margin-top: 0; margin-bottom: 8px; }
+    .subtitle { color: #64748b; font-size: 16px; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 18px; }
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+      background: #fff;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s ease-in-out;
+    }
+    .doc-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(124, 58, 237, 0.1);
+      border-color: var(--primary);
+    }
+    .doc-num {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .doc-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    .doc-desc {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.5;
+      flex-grow: 1;
+    }
+    .doc-link {
+      margin-top: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook Documentation Hub</h1>
+    <div class="subtitle">Complete Scratch-to-End Enterprise Architecture, Engineering, Operations & Commercial Documentation &bull; Release Date: November 05, 2026</div>
+
+    <div class="doc-grid">
+      <a href="01_Requirements.html" class="doc-card">
+        <div class="doc-num">Doc 01</div>
+        <div class="doc-title">Requirements (SRS v2.0)</div>
+        <div class="doc-desc">Comprehensive Software Requirements Specification covering 3 user groups, multi-scope management, approval state machines, and dual revenue models.</div>
+        <div class="doc-link">Open Requirements &rarr;</div>
+      </a>
+
+      <a href="02_Approach.html" class="doc-card">
+        <div class="doc-num">Doc 02</div>
+        <div class="doc-title">Engineering Approach</div>
+        <div class="doc-desc">Architectural rationale, microservices decomposition, Ocelot Gateway, relational integrity matrix, dynamic slot algorithms, and double-entry accounting.</div>
+        <div class="doc-link">Open Approach &rarr;</div>
+      </a>
+
+      <a href="03_Implementation.html" class="doc-card">
+        <div class="doc-num">Doc 03</div>
+        <div class="doc-title">Implementation Specs</div>
+        <div class="doc-desc">Complete code walkthrough across .NET 8 backend microservices, PostgreSQL schemas, React/Vite management portal, and Next.js customer app.</div>
+        <div class="doc-link">Open Implementation &rarr;</div>
+      </a>
+
+      <a href="04_Developer.html" class="doc-card">
+        <div class="doc-num">Doc 04</div>
+        <div class="doc-title">Developer Guide</div>
+        <div class="doc-desc">Local environment setup, port registry (5000-5006, 3000, 3001), debugging microservices, EF Core repository patterns, and batch run scripts.</div>
+        <div class="doc-link">Open Developer Guide &rarr;</div>
+      </a>
+
+      <a href="05_UnitTest.html" class="doc-card">
+        <div class="doc-num">Doc 05</div>
+        <div class="doc-title">Unit & Integration Testing</div>
+        <div class="doc-desc">Quality assurance test suites: xUnit financial assertions, slot conflict tests, 6-digit OTP verification security, and PowerShell API test payloads.</div>
+        <div class="doc-link">Open Unit Testing &rarr;</div>
+      </a>
+
+      <a href="06_Deployment.html" class="doc-card">
+        <div class="doc-num">Doc 06</div>
+        <div class="doc-title">Production Deployment</div>
+        <div class="doc-desc">Step-by-step production rollout using Docker Compose, AWS/Azure cloud architectures, Nginx SSL reverse proxy (Certbot), and automated DB backups.</div>
+        <div class="doc-link">Open Deployment &rarr;</div>
+      </a>
+
+      <a href="07_InitialSteps.html" class="doc-card">
+        <div class="doc-num">Doc 07</div>
+        <div class="doc-title">Initial Steps & Quickstart</div>
+        <div class="doc-desc">First-time run guide: prerequisite verification, database seeding, seeded test credentials table, and end-to-end walkthrough script.</div>
+        <div class="doc-link">Open Initial Steps &rarr;</div>
+      </a>
+
+      <a href="08_Workflow.html" class="doc-card">
+        <div class="doc-num">Doc 08</div>
+        <div class="doc-title">Operational Workflows</div>
+        <div class="doc-desc">Detailed state machines for owner approvals, 8-minute cart locking, doorstep commute buffer algorithms, OTP verification, and payout settlements.</div>
+        <div class="doc-link">Open Workflows &rarr;</div>
+      </a>
+
+      <a href="09_Marketing.html" class="doc-card">
+        <div class="doc-num">Doc 09</div>
+        <div class="doc-title">Marketing & Growth Playbook</div>
+        <div class="doc-desc">Tamil Nadu regional expansion strategy (Ramnad, Puduvalasai, Panaikulam, Sakkarakottai), B2B salon partner acquisition, and B2C viral loops.</div>
+        <div class="doc-link">Open Marketing &rarr;</div>
+      </a>
+
+      <a href="10_Brochures.html" class="doc-card">
+        <div class="doc-num">Doc 10</div>
+        <div class="doc-title">Sales Brochures & Collateral</div>
+        <div class="doc-desc">High-impact marketing collateral: B2B Partner Pitch ("Why Salons Join StyleBook"), membership plan comparison, and B2C Customer Onboarding Brochure.</div>
+        <div class="doc-link">Open Brochures &rarr;</div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

@@ -642,7 +642,7 @@ export default function CustomerLandingPage() {
   }
   const netPayable = Math.max(0, basePrice - discountAmount);
 
-  // Confirm Booking & Generate 6-Digit Check-in OTP
+  // Confirm Booking & Place Request in PendingConfirmation state (Awaiting Stylist/Salon confirmation)
   const handleConfirmBooking = () => {
     const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const newRef = `SB-RAMNAD-${Math.floor(10 + Math.random() * 90)}`;
@@ -663,8 +663,9 @@ export default function CustomerLandingPage() {
       workType: selectedWorkType,
       amount: netPayable,
       couponApplied: appliedCoupon ? appliedCoupon.code : null,
-      status: 'Confirmed',
-      otp: generatedOtp,
+      status: 'PendingConfirmation', // WAITING FOR CONFIRMATION!
+      otp: null, // Locked until confirmed!
+      lockedOtp: generatedOtp,
       assignedBy: confirmationType,
       branchPoc: selectedBranch ? selectedBranch.poc : (selectedSalon ? selectedSalon.poc : null),
       hasReviewed: false
@@ -673,7 +674,9 @@ export default function CustomerLandingPage() {
     setCustomerBookings([newBooking, ...customerBookings]);
     setBookingConfirmed({
       reference: newRef,
-      otp: generatedOtp,
+      status: 'PendingConfirmation',
+      otp: null,
+      lockedOtp: generatedOtp,
       salon: newBooking.salon,
       branchName: newBooking.branchName,
       stylistName: newBooking.stylistName,
@@ -685,6 +688,40 @@ export default function CustomerLandingPage() {
       confirmationType,
       branchPoc: newBooking.branchPoc
     });
+  };
+
+  // Simulate Salon/Stylist Confirmation on Customer Portal
+  const handleSimulateConfirmation = (ref) => {
+    setCustomerBookings(prev => prev.map(b => {
+      if (b.reference === ref) {
+        return {
+          ...b,
+          status: 'Confirmed',
+          otp: b.lockedOtp || '849201'
+        };
+      }
+      return b;
+    }));
+
+    if (bookingConfirmed && bookingConfirmed.reference === ref) {
+      setBookingConfirmed(prev => ({
+        ...prev,
+        status: 'Confirmed',
+        otp: prev.lockedOtp || '849201'
+      }));
+    }
+    showToast('Salon Partner CONFIRMED your booking! 6-Digit Check-in OTP is now unlocked.');
+  };
+
+  // Cancel Booking Handler
+  const handleCancelBooking = (ref) => {
+    setCustomerBookings(prev => prev.map(b => {
+      if (b.reference === ref) {
+        return { ...b, status: 'Cancelled' };
+      }
+      return b;
+    }));
+    showToast(`Booking ${ref} cancelled successfully. 100% full refund initiated.`);
   };
 
   // ==========================================

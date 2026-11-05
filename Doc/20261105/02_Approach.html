@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Architectural & Engineering Approach</title>
+  <style>
+    :root {
+      --primary: #7c3aed; --primary-light: #f5f3ff; --primary-dark: #5b21b6;
+      --secondary: #0d9488; --text: #0f172a; --muted: #475569; --bg: #f8fafc;
+      --card: #ffffff; --border: #e2e8f0;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text); background: var(--bg); margin: 0; padding: 30px 15px; }
+    .container { max-width: 1200px; margin: 0 auto; background: var(--card); padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
+    h2 { color: var(--primary-dark); font-size: 20px; margin-top: 32px; border-left: 4px solid var(--primary); padding-left: 10px; }
+    h3 { color: #1e293b; font-size: 16px; margin-top: 20px; }
+    .card { background: var(--primary-light); border: 1px solid #ddd6fe; border-radius: 8px; padding: 18px; margin-bottom: 18px; }
+    .arch-box { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 18px; margin: 18px 0; }
+    pre { background: #0f172a; color: #f8fafc; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; font-family: Consolas, monospace; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 5px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th { background: #f1f5f9; color: #334155; text-align: left; padding: 10px; border: 1px solid var(--border); }
+    td { padding: 10px; border: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - Architectural & Engineering Approach v2.0</h1>
+    <p>High-Level Architectural Patterns, Engineering Rationale, Concurrency Strategies & Financial Design</p>
+
+    <h2>1. Microservices Architecture & Ocelot Gateway Pattern</h2>
+    <div class="card">
+      <p>Salon marketplaces experience asymmetric query profiles: high-volume read searches (browsing salons across Ramnad, Puduvalasai, Panaikulam) vs. mission-critical transactional writes (slot reservations, OTP verification, wallet debits). We decompose the backend into isolated microservices behind an Ocelot API Gateway running on Port 5000:</p>
+      <ul>
+        <li><strong>StyleBook.MasterData.Api (Port 5001):</strong> Read-heavy geography, master service taxonomy, and work types. Cached in-memory.</li>
+        <li><strong>StyleBook.Identity.Api (Port 5002):</strong> Authentication, JWT tokens, RBAC roles, and territorial allocation enforcement.</li>
+        <li><strong>StyleBook.Salon.Api (Port 5003):</strong> Salon profiles, multi-branch management, stylist rosters, custom pricing, and approval workflows.</li>
+        <li><strong>StyleBook.Booking.Api (Port 5004):</strong> Slot calculation engine, cart locking, appointment state machine, OTP generation/verification, and reviews.</li>
+        <li><strong>StyleBook.Marketing.Api (Port 5005):</strong> Promo coupons, announcements, and compliance notice tracking.</li>
+        <li><strong>StyleBook.Billing.Api (Port 5006 - New):</strong> Membership plan subscriptions, booking commission splits, owner wallets, and automated payout batches.</li>
+      </ul>
+    </div>
+
+    <h2>2. Search-to-Booking Relational Integrity Matrix</h2>
+    <div class="arch-box">
+      <p>A primary failure mode in marketplace platforms is booking invalid combinations (e.g. a customer selects a stylist who cannot perform the requested facial, or requests a service at a branch that lacks equipment). StyleBook enforces relational dependency at the API layer:</p>
+      <pre><code>RELATIONAL INTEGRITY CONSTRAINTS:
+1. Branch-First:
+   Select Branch (B) 
+     &rarr; Filter Services (S) where S &isin; branch_service_pricing(branch_id = B, is_offered = true)
+     &rarr; Filter Stylists (T) where T.current_branch_id = B AND S &isin; stylist_service_durations(T)
+     &rarr; Fallback: "Any Available Stylist" (assignment handled by Salon Owner)
+
+2. Stylist-First:
+   Select Stylist (T)
+     &rarr; Filter Services (S) where S &isin; stylist_service_durations(T)
+     &rarr; Filter Branches (B) where B = T.current_branch_id
+     &rarr; Doorstep Mode: Allowed IF service.is_doorstep_eligible AND T.doorstep_enabled</code></pre>
+    </div>
+
+    <h2>3. Dynamic Slot Calculation & Cart Holding (Atomic Locking)</h2>
+    <div class="card">
+      <h3>Slot Computation Pipeline:</h3>
+      <ol>
+        <li>Query <code>salon.stylist_working_hours</code> for targeted date's day-of-week (start time, end time, break hours).</li>
+        <li>Check <code>salon.stylist_daily_exceptions</code> (approved leave or custom shift).</li>
+        <li>Query existing confirmed bookings in <code>booking.bookings</code> for target date and stylist.</li>
+        <li>Calculate total service duration (sum of service durations + doorstep commute buffer if applicable).</li>
+        <li>Slide time window at 15-minute intervals. If candidate interval overlaps with booked slots or break times, mark <code>Available = false</code>.</li>
+        <li><strong>Atomic Cart Hold:</strong> When customer clicks "Proceed to Checkout", the slot is reserved for **8 minutes** with a temporary hold key. This prevents race conditions where two customers attempt to pay for the same 4:00 PM slot.</li>
+      </ol>
+    </div>
+
+    <h2>4. Financial Escrow & Pre-Funded Wallet Architecture</h2>
+    <p>StyleBook supports both Online and Pay-at-Salon cash bookings with complete commission guarantees:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Payment Mode</th>
+          <th>Flow of Funds</th>
+          <th>Platform Commission Collection</th>
+          <th>Risk Mitigation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Online (Card/UPI/NetBanking)</strong></td>
+          <td>Customer &rarr; StyleBook Escrow &rarr; Owner Virtual Wallet</td>
+          <td>Directly withheld before crediting Owner Ledger (e.g. 10% commission + 18% GST).</td>
+          <td>Zero risk of default; funds held safely until OTP completion.</td>
+        </tr>
+        <tr>
+          <td><strong>Pay-at-Salon (Cash)</strong></td>
+          <td>Customer &rarr; Salon Barber (100% Cash in Hand)</td>
+          <td>Debited automatically from Owner's <strong>Prepaid Security Wallet</strong> upon OTP verification.</td>
+          <td>If wallet drops below -₹2,000 threshold, salon's booking acceptance is automatically locked.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>5. Fraud-Proof 6-Digit OTP Handshake Protocol</h2>
+    <div class="arch-box">
+      <p>Appointments cannot be marked completed or debited without physical presence verification:</p>
+      <ul>
+        <li>When booking is confirmed, an encrypted 6-digit OTP is generated and displayed on the Customer App.</li>
+        <li>Upon arrival at the salon (or when the mobile stylist arrives at the customer's doorstep), the customer provides the OTP.</li>
+        <li>The stylist enters the OTP in the Management Mobile App.</li>
+        <li>The system validates the SHA-256 hash, changes status from <code>PendingConfirmation / Confirmed</code> to <code>In-Progress</code>, and starts the service timer.</li>
+        <li>Upon service completion, the status updates to <code>Completed</code>, releasing escrow funds to the owner ledger and prompting the customer for dual ratings.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

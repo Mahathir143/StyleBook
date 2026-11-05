@@ -3,10 +3,11 @@ import {
   ShieldCheck, Store, Scissors, Calendar, Tag, Bell, CheckCircle2, 
   XCircle, Clock, MapPin, UserCheck, Phone, DollarSign, LogOut, 
   ArrowRight, Sparkles, AlertCircle, RefreshCw, Smartphone, Key, Plus, Lock, User,
-  FileText, AlertTriangle, Users, Building, Send, Check, ShieldAlert, Globe, ArrowLeftRight, HelpCircle, Mail
+  FileText, AlertTriangle, Users, Building, Send, Check, ShieldAlert, Globe, ArrowLeftRight, HelpCircle, Mail,
+  Wallet, CreditCard, CheckSquare, XSquare, Eye
 } from 'lucide-react';
 
-// Pre-configured Test Users with Strict Hierarchy
+// Pre-configured Test Users with Strict Hierarchy & Territorial Scoping
 const PRESET_USERS = [
   { 
     username: 'superadmin', 
@@ -67,6 +68,7 @@ const PRESET_USERS = [
     type: 'STYLIST', 
     name: 'Karthik Raja', 
     stylistId: 'c1111111-1111-1111-1111-111111111111',
+    salonId: 'aaaa1111-aaaa-1111-aaaa-111111111111',
     salon: 'Royal Classic - Ramnad Town Branch',
     hierarchyLevel: 5,
     zoneId: 1
@@ -105,8 +107,9 @@ export default function App() {
   const [showIssueNoticeModal, setShowIssueNoticeModal] = useState(false);
   const [showOwnerReplyModal, setShowOwnerReplyModal] = useState(null);
   const [showCreateGeoModal, setShowCreateGeoModal] = useState(false);
+  const [showTopUpWalletModal, setShowTopUpWalletModal] = useState(false);
 
-  // 1. Master Geographies (Countries -> States -> Zones -> Districts)
+  // 1. Master Geographies
   const [countries, setCountries] = useState([
     { id: 1, name: 'India', iso: 'IND', phoneCode: '+91' },
     { id: 2, name: 'United Arab Emirates', iso: 'ARE', phoneCode: '+971' },
@@ -134,18 +137,33 @@ export default function App() {
     { id: 6, zoneId: 2, name: 'Madurai Central' }
   ]);
 
-  // Master Services Catalog with Minimum Floor Price
+  // Master & Custom Services Catalog (Includes Owner Custom Services with Approval Status)
   const [masterServices, setMasterServices] = useState([
-    { id: 1, name: 'Royal Precision Haircut & Wash', category: 'Hair Care', duration: 30, basePrice: 200, minFloorPrice: 150, isActive: true },
-    { id: 2, name: 'Herbal Hair Spa & Dandruff Care', category: 'Hair Care', duration: 45, basePrice: 650, minFloorPrice: 500, isActive: true },
-    { id: 3, name: 'Royal Hot Towel Shave', category: 'Shave & Beard', duration: 25, basePrice: 150, minFloorPrice: 100, isActive: true },
-    { id: 4, name: 'Beard Shape & Designer Trim', category: 'Shave & Beard', duration: 20, basePrice: 120, minFloorPrice: 90, isActive: true },
-    { id: 5, name: 'Kesar Gold Glow Facial', category: 'Facial & Glow', duration: 45, basePrice: 800, minFloorPrice: 650, isActive: true },
-    { id: 6, name: 'Traditional South Bridal Makeover', category: 'Bridal', duration: 90, basePrice: 3000, minFloorPrice: 2000, isActive: true },
-    { id: 7, name: 'Ayurvedic Head & Shoulder Massage', category: 'Head Massage', duration: 30, basePrice: 400, minFloorPrice: 300, isActive: true }
+    { id: 1, name: 'Royal Precision Haircut & Wash', category: 'Hair Care', duration: 30, basePrice: 200, minFloorPrice: 150, approvalStatus: 'Approved', isActive: true },
+    { id: 2, name: 'Herbal Hair Spa & Dandruff Care', category: 'Hair Care', duration: 45, basePrice: 650, minFloorPrice: 500, approvalStatus: 'Approved', isActive: true },
+    { id: 3, name: 'Royal Hot Towel Shave', category: 'Shave & Beard', duration: 25, basePrice: 150, minFloorPrice: 100, approvalStatus: 'Approved', isActive: true },
+    { id: 4, name: 'Beard Shape & Designer Trim', category: 'Shave & Beard', duration: 20, basePrice: 120, minFloorPrice: 90, approvalStatus: 'Approved', isActive: true },
+    { id: 5, name: 'Kesar Gold Glow Facial', category: 'Facial & Glow', duration: 45, basePrice: 800, minFloorPrice: 650, approvalStatus: 'Approved', isActive: true },
+    { id: 6, name: 'Traditional South Bridal Makeover', category: 'Bridal', duration: 90, basePrice: 3000, minFloorPrice: 2000, approvalStatus: 'Approved', isActive: true },
+    { id: 7, name: 'Ayurvedic Head & Shoulder Massage', category: 'Head Massage', duration: 30, basePrice: 400, minFloorPrice: 300, approvalStatus: 'Approved', isActive: true },
+    // Custom Service submitted by Owner (Pending Zonal Manager Review!)
+    { 
+      id: 8, 
+      name: 'Moroccan Argan Oil Hair Keratin Repair', 
+      category: 'Hair Care', 
+      duration: 60, 
+      basePrice: 1200, 
+      minFloorPrice: 950, 
+      customPrice: 1100, 
+      salonId: 'aaaa1111-aaaa-1111-aaaa-111111111111', 
+      submittedBy: 'Anwar Hussain (Royal Classic)',
+      targetBranchName: 'Ramnad Town Branch',
+      approvalStatus: 'Pending_Approval', 
+      isActive: true 
+    }
   ]);
 
-  // Salons
+  // Salons (Includes Pending Salon in Sakkarakottai)
   const [salons, setSalons] = useState([
     {
       id: 'aaaa1111-aaaa-1111-aaaa-111111111111',
@@ -187,6 +205,7 @@ export default function App() {
       zoneName: 'Zone 1 - Ramanathapuram',
       locality: 'Sakkarakottai Main Road',
       status: 'Pending',
+      rejectionReason: null,
       isActive: true,
       pocName: 'Saravanan Natarajan',
       pocPhone: '+91 94431 88992',
@@ -209,7 +228,7 @@ export default function App() {
     }
   ]);
 
-  // Branches (Hierarchical: Country -> State -> Zone -> District)
+  // Branches
   const [branches, setBranches] = useState([
     {
       id: 'b1111111-1111-1111-1111-111111111111',
@@ -222,6 +241,7 @@ export default function App() {
       addressLine: 'Opposite Bus Stand, Vandikkara Street, Ramnad Town 623501',
       phoneContact: '+91 98421 00111',
       isDoorstepEnabled: true,
+      status: 'Approved',
       isActive: true,
       pocName: 'Senthil Nathan',
       pocPhone: '+91 94431 77111',
@@ -240,29 +260,31 @@ export default function App() {
       addressLine: 'East Coast Road Junction, Near Post Office, Puduvalasai 623505',
       phoneContact: '+91 98421 00222',
       isDoorstepEnabled: true,
+      status: 'Approved',
       isActive: true,
       pocName: 'Ilyas Raja',
       pocPhone: '+91 94431 77222',
       pocEmail: 'poc.puduvalasai@royalclassic.in',
       pocRole: 'Branch In-Charge',
-      offeredServiceIds: [1, 2, 5]
+      offeredServiceIds: [1, 3, 4]
     },
     {
       id: 'b3333333-3333-3333-3333-333333333333',
       salonId: 'bbbb2222-bbbb-2222-bbbb-222222222222',
       salonName: 'Kavitha Doorstep Bridal & Beauty Care',
-      branchName: 'Kavitha Doorstep Studio (Panaikulam)',
+      branchName: 'Kavitha Doorstep Studio (Panaikulam / Sakkarakottai)',
       countryId: 1, stateId: 1, zoneId: 1, districtId: 3,
       country: 'India', state: 'Tamil Nadu', zone: 'Zone 1 - Ramanathapuram', district: 'Panaikulam',
       locality: 'Panaikulam',
       addressLine: 'Doorstep Mobile Service, Covering Panaikulam, Sakkarakottai & Ramnad',
       phoneContact: '+91 98421 00333',
       isDoorstepEnabled: true,
+      status: 'Approved',
       isActive: true,
       pocName: 'Kavitha Praveen',
       pocPhone: '+91 94431 88991',
       pocEmail: 'kavitha.beauty@gmail.com',
-      pocRole: 'Lead Beautician & Site POC',
+      pocRole: 'Lead Beautician & POC',
       offeredServiceIds: [5, 6, 7]
     },
     {
@@ -276,16 +298,17 @@ export default function App() {
       addressLine: 'Main Bazar Road, Near Govt Higher Secondary School, Sakkarakottai 623504',
       phoneContact: '+91 98421 00444',
       isDoorstepEnabled: false,
+      status: 'Pending',
       isActive: true,
       pocName: 'Saravanan Natarajan',
       pocPhone: '+91 94431 88992',
       pocEmail: 'saravanan.sakkarakottai@gmail.com',
       pocRole: 'Store Manager & POC',
-      offeredServiceIds: [1, 3, 7]
+      offeredServiceIds: [1, 3, 4]
     }
   ]);
 
-  // Stylists with Supported Services & Branch Mapping
+  // Stylists
   const [stylists, setStylists] = useState([
     {
       id: 'c1111111-1111-1111-1111-111111111111',
@@ -294,7 +317,7 @@ export default function App() {
       specialization: 'Master Stylist & Herbal Hair Care Expert',
       branchId: 'b1111111-1111-1111-1111-111111111111',
       branch: 'Royal Classic - Ramnad Town Branch',
-      supportedServiceIds: [1, 2, 3, 4], // Can perform these
+      supportedServiceIds: [1, 2, 3, 4],
       doorstepEnabled: true,
       doorstepRadiusKm: 12,
       shiftToday: '09:00 AM - 08:00 PM (Lunch 01:00 PM - 02:00 PM)',
@@ -312,7 +335,7 @@ export default function App() {
       supportedServiceIds: [5, 6, 7],
       doorstepEnabled: true,
       doorstepRadiusKm: 15,
-      shiftToday: '10:00 AM - 07:00 PM (Direct Client Booking)',
+      shiftToday: '10:00 AM - 07:00 PM (Lunch 01:30 PM - 02:30 PM)',
       rating: 4.95,
       totalReviews: 52,
       isActive: true
@@ -320,21 +343,21 @@ export default function App() {
     {
       id: 'c3333333-3333-3333-3333-333333333333',
       salonId: 'aaaa1111-aaaa-1111-aaaa-111111111111',
-      name: 'Ilyas Senior Barber',
-      specialization: 'Hot Towel Shave & Beard Contouring',
-      branchId: 'b2222222-2222-2222-2222-222222222222',
-      branch: 'Royal Classic - Puduvalasai Branch',
+      name: 'Muthu Kumar',
+      specialization: 'Senior Hair & Beard Specialist',
+      branchId: 'b1111111-1111-1111-1111-111111111111',
+      branch: 'Royal Classic - Ramnad Town Branch',
       supportedServiceIds: [1, 3, 4],
       doorstepEnabled: false,
       doorstepRadiusKm: 0,
-      shiftToday: '09:30 AM - 08:30 PM (Lunch 01:30 PM - 02:30 PM)',
+      shiftToday: '10:00 AM - 09:00 PM (Lunch 02:00 PM - 03:00 PM)',
       rating: 4.85,
       totalReviews: 34,
       isActive: true
     }
   ]);
 
-  // Bookings with Stylist Specificity & Owner Assignment
+  // Bookings with Flow State: PendingConfirmation -> Confirmed (OTP Unlocked) -> InProgress -> Completed
   const [bookings, setBookings] = useState([
     {
       id: 'bk-201',
@@ -348,11 +371,12 @@ export default function App() {
       branch: 'Royal Classic - Ramnad Town Branch',
       stylistId: 'c1111111-1111-1111-1111-111111111111',
       stylist: 'Karthik Raja',
-      bookedStylistSpecific: true, // Customer booked specific stylist!
-      confirmationStatus: 'Confirmed', // Confirmed by Stylist/Owner
+      bookedStylistSpecific: true,
+      confirmationStatus: 'Confirmed',
       date: 'Today, 25 Oct 2026',
       slot: '02:00 PM - 02:45 PM',
       netAmount: 600,
+      paymentMode: 'PAY_AT_SALON_CASH',
       status: 'Completed',
       otp: '482910',
       isOtpVerified: true
@@ -374,6 +398,7 @@ export default function App() {
       date: 'Today, 25 Oct 2026',
       slot: '04:00 PM - 05:30 PM',
       netAmount: 2380,
+      paymentMode: 'ONLINE_ESCROW',
       status: 'Confirmed',
       otp: '915234',
       isOtpVerified: false
@@ -391,21 +416,74 @@ export default function App() {
       stylistId: null, // Customer chose "Any Stylist"
       stylist: 'Unassigned (Awaiting Owner Allocation)',
       bookedStylistSpecific: false,
-      confirmationStatus: 'AwaitingOwnerAssignment',
+      confirmationStatus: 'PendingConfirmation',
       date: 'Tomorrow, 26 Oct 2026',
       slot: '11:00 AM - 11:30 AM',
       netAmount: 200,
+      paymentMode: 'PAY_AT_SALON_CASH',
       status: 'PendingConfirmation',
       otp: '782194',
+      isOtpVerified: false
+    },
+    {
+      id: 'bk-204',
+      reference: 'SB-RAMNAD-04',
+      customer: 'Anandhan Raj',
+      phone: '+91 98421 11223',
+      service: 'Royal Precision Haircut & Wash',
+      serviceId: 1,
+      salonId: 'aaaa1111-aaaa-1111-aaaa-111111111111',
+      branchId: 'b1111111-1111-1111-1111-111111111111',
+      branch: 'Royal Classic - Ramnad Town Branch',
+      stylistId: 'c1111111-1111-1111-1111-111111111111',
+      stylist: 'Karthik Raja',
+      bookedStylistSpecific: true,
+      confirmationStatus: 'PendingConfirmation',
+      date: 'Today, 06:00 PM',
+      slot: '06:00 PM - 06:30 PM',
+      netAmount: 200,
+      paymentMode: 'PAY_AT_SALON_CASH',
+      status: 'PendingConfirmation',
+      otp: '654321',
       isOtpVerified: false
     }
   ]);
 
-  // Governance & Compliance Notices (Targeted to Stylist / Owner / Branch / Customer)
+  // Salon Owner Wallets & Membership (Accounting Schema)
+  const [wallets, setWallets] = useState({
+    'aaaa1111-aaaa-1111-aaaa-111111111111': {
+      salonName: 'Royal Classic Unisex Salon & Spa',
+      balance: 4500.00,
+      pendingClearance: 1200.00,
+      membershipPlan: 'Pro Growth (Up to 3 Branches)',
+      membershipFee: '₹2,499 / month',
+      commissionRate: 8,
+      negativeCreditLimit: -2000.00,
+      isPayoutBlocked: false
+    },
+    'bbbb2222-bbbb-2222-bbbb-222222222222': {
+      salonName: 'Kavitha Doorstep Bridal & Beauty Care',
+      balance: 1850.00,
+      pendingClearance: 600.00,
+      membershipPlan: 'Starter Solo (Independent Beautician)',
+      membershipFee: '₹799 / month',
+      commissionRate: 12,
+      negativeCreditLimit: -1500.00,
+      isPayoutBlocked: false
+    }
+  });
+
+  const [walletLedger, setWalletLedger] = useState([
+    { id: 'tx-101', salonId: 'aaaa1111-aaaa-1111-aaaa-111111111111', type: 'CASH_COMMISSION_DEBIT', amount: -70.80, desc: 'Commission (10%) + 18% GST for Completed Cash Booking SB-RAMNAD-01 (₹600)', date: 'Today, 02:45 PM' },
+    { id: 'tx-102', salonId: 'aaaa1111-aaaa-1111-aaaa-111111111111', type: 'WALLET_TOPUP', amount: 2000.00, desc: 'Security Wallet Deposit via UPI (Ref: UPI/2026/89401)', date: 'Yesterday, 10:15 AM' },
+    { id: 'tx-103', salonId: 'bbbb2222-bbbb-2222-bbbb-222222222222', type: 'ONLINE_ESCROW_CREDIT', amount: 2099.16, desc: 'Net Earnings Credit for Online Booking SB-RAMNAD-02 (₹2,380)', date: 'Today, 05:30 PM' }
+  ]);
+
+  // Governance & Compliance Notices
   const [complianceNotices, setComplianceNotices] = useState([
     {
       id: 'not-01',
-      targetType: 'BRANCH', // BRANCH, STYLIST, OWNER, CUSTOMER
+      targetType: 'BRANCH',
       targetName: 'Royal Classic - Puduvalasai Branch',
       salonId: 'aaaa1111-aaaa-1111-aaaa-111111111111',
       branchId: 'b2222222-2222-2222-2222-222222222222',
@@ -417,116 +495,134 @@ export default function App() {
       status: 'NOTICE_ISSUED',
       ownerReply: null,
       issuedDate: '25 Oct 2026, 11:30 AM'
-    },
-    {
-      id: 'not-02',
-      targetType: 'STYLIST',
-      targetName: 'Karthik Raja (Stylist)',
-      salonId: 'aaaa1111-aaaa-1111-aaaa-111111111111',
-      branchId: 'b1111111-1111-1111-1111-111111111111',
-      issuedBy: 'Selvakumar (State Admin)',
-      category: 'Attendance & Punctuality',
-      subject: 'Morning Shift Adherence Notice',
-      description: 'Stylist must adhere strictly to agreed 9:00 AM opening shift buffer.',
-      gracePeriodHours: 24,
-      status: 'NOTICE_ISSUED',
-      ownerReply: null,
-      issuedDate: '25 Oct 2026, 09:00 AM'
     }
   ]);
 
-  // Verified Customer Reviews (Branch + Stylist Dual Reviews)
+  // Verified Customer Reviews
   const [reviews, setReviews] = useState([
     {
       id: 'rev-01',
-      bookingReference: 'SB-RAMNAD-01',
+      bookingRef: 'SB-RAMNAD-01',
+      salonId: 'aaaa1111-aaaa-1111-aaaa-111111111111',
+      salonName: 'Royal Classic Unisex Salon & Spa',
+      branchName: 'Ramnad Town Branch',
       customerName: 'Mohamed Irfan',
-      branchName: 'Royal Classic - Ramnad Town Branch',
-      stylistName: 'Karthik Raja',
+      date: '25 Oct 2026',
       branchRating: 5,
-      branchComment: 'Extremely clean salon with hygienic towels and air conditioning. Best salon in Ramnad Town!',
+      branchComment: 'Spotless cleanliness, excellent AC ambiance, and negligible waiting time.',
+      stylistName: 'Karthik Raja',
       stylistRating: 5,
-      stylistComment: 'Karthik gave a relaxing herbal hair spa. Very polite and professional technique.',
-      createdAt: 'Today, 25 Oct 2026'
+      stylistComment: 'Karthik gave a superb herbal hair spa. Very attentive and skilled with scissors.',
+      ownerReply: 'Thank you Irfan! We take pride in our organic herbal hair spa standards. Visit again!'
     }
   ]);
 
-  // System Users
-  const [usersList, setUsersList] = useState(PRESET_USERS);
+  // Users Directory for Downgrade Provisioning
+  const [usersList, setUsersList] = useState([
+    { id: 'u1', username: 'superadmin', role: 'SUPER_ADMIN', name: 'Global Platform Admin', hierarchyLevel: 1, jurisdiction: 'Global' },
+    { id: 'u2', username: 'admin_tamilnadu', role: 'ADMIN', name: 'Selvakumar', hierarchyLevel: 2, jurisdiction: 'Tamil Nadu State' },
+    { id: 'u3', username: 'zonal_ramnad', role: 'ZONAL_MANAGER', name: 'Murugan', hierarchyLevel: 3, jurisdiction: 'Zone 1 - Ramanathapuram' },
+    { id: 'u4', username: 'owner_anwar', role: 'SHOP_OWNER', name: 'Anwar Hussain', hierarchyLevel: 4, jurisdiction: 'Ramnad Town & Puduvalasai' },
+    { id: 'u5', username: 'owner_kavitha', role: 'INDEPENDENT_OWNER', name: 'Kavitha Praveen', hierarchyLevel: 4, jurisdiction: 'Panaikulam & Sakkarakottai' },
+    { id: 'u6', username: 'stylist_karthik', role: 'STYLIST', name: 'Karthik Raja', hierarchyLevel: 5, jurisdiction: 'Ramnad Town Branch' }
+  ]);
 
-  // Form states for modals
+  // Form States
   const [newBranchForm, setNewBranchForm] = useState({
     branchName: '', countryId: 1, stateId: 1, zoneId: 1, districtId: 1,
     addressLine: '', phoneContact: '', isDoorstepEnabled: false,
-    pocName: '', pocPhone: '', pocEmail: '', pocRole: 'Branch Operations Head',
+    pocName: '', pocPhone: '', pocEmail: '', pocRole: 'Branch In-Charge',
     selectedServices: [1, 2, 3]
   });
 
   const [newStylistForm, setNewStylistForm] = useState({
-    name: '', branchId: 'b1111111-1111-1111-1111-111111111111',
-    specialization: 'Hair Care & Shave Expert', selectedServices: [1, 2],
-    doorstepEnabled: false, doorstepRadiusKm: 10
+    name: '', specialization: 'Hair & Beard Stylist', branchId: '',
+    supportedServices: [1, 3], doorstepEnabled: false, doorstepRadiusKm: 10
   });
 
   const [newServiceForm, setNewServiceForm] = useState({
-    name: '', category: 'Hair Care', duration: 30, basePrice: 250, minFloorPrice: 200
+    name: '', category: 'Hair Care', duration: 30, basePrice: 200, minFloorPrice: 150,
+    customPrice: 200, isDoorstepEligible: true, targetBranchId: ''
   });
 
   const [newNoticeForm, setNewNoticeForm] = useState({
     targetType: 'BRANCH', targetName: '', salonId: 'aaaa1111-aaaa-1111-aaaa-111111111111',
-    branchId: 'b1111111-1111-1111-1111-111111111111', category: 'Hygiene & Sanitation',
-    subject: '', description: '', gracePeriodHours: 48
-  });
-
-  const [newGeoForm, setNewGeoForm] = useState({
-    type: 'COUNTRY', countryName: '', iso: '', phoneCode: '+', stateName: '', zoneName: '', districtName: ''
+    branchId: '', category: 'Hygiene & Cleanliness', subject: '', description: '', gracePeriodHours: 48
   });
 
   const [newUserForm, setNewUserForm] = useState({
-    fullName: '', username: '', role: 'ZONAL_MANAGER', territoryZone: 'Zone 1 - Ramanathapuram'
+    fullName: '', username: '', role: 'STYLIST', territoryZone: 'Zone 1 - Ramanathapuram'
+  });
+
+  const [newGeoForm, setNewGeoForm] = useState({
+    entityType: 'DISTRICT', parentId: 1, name: '', code: ''
   });
 
   const [shiftAdjustmentForm, setShiftAdjustmentForm] = useState({
-    stylistId: '', newStartTime: '09:00 AM', newEndTime: '08:00 PM', newLunchStart: '03:00 PM', newLunchEnd: '04:00 PM'
+    stylistId: '', newStartTime: '09:00 AM', newEndTime: '08:00 PM',
+    newLunchStart: '01:00 PM', newLunchEnd: '02:00 PM', reason: 'Personal buffer request'
   });
 
   const [ownerReplyText, setOwnerReplyText] = useState('');
+  const [rejectionModalData, setRejectionModalData] = useState(null); // { type: 'SALON'|'BRANCH'|'SERVICE', id: string, name: string }
+  const [rejectionReasonInput, setRejectionReasonInput] = useState('');
 
   const showToast = (msg) => {
     setNotificationMsg(msg);
-    setTimeout(() => setNotificationMsg(null), 3500);
+    setTimeout(() => setNotificationMsg(null), 4000);
   };
 
   // Login handler
   const handleLogin = (e) => {
     if (e) e.preventDefault();
-    const username = loginForm.username.trim().toLowerCase();
-    const user = usersList.find(u => u.username.toLowerCase() === username);
+    setLoginError('');
 
-    if (user) {
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-      setLoginError('');
-      showToast(`Welcome, ${user.name}! Logged in as ${user.label}`);
-    } else {
-      setLoginError('Invalid credentials. Check username or select a test role.');
+    const found = PRESET_USERS.find(u => u.username === loginForm.username);
+    if (!found) {
+      setLoginError('Invalid username. Please select one of the pre-configured hierarchy accounts below.');
+      return;
     }
+
+    if (loginForm.password !== 'Admin@12345' && loginForm.password !== 'Zone@12345' && loginForm.password !== 'Owner@12345' && loginForm.password !== 'Stylist@12345' && loginForm.password !== 'test1234') {
+      // Allow any password in dev mode
+    }
+
+    setCurrentUser(found);
+    setIsAuthenticated(true);
+    // If Zonal Manager logs in, set default to approvals tab if pending items exist
+    if (found.role === 'ZONAL_MANAGER' || found.hierarchyLevel <= 3) {
+      setActiveTab('approvals');
+    } else {
+      setActiveTab('overview');
+    }
+    showToast(`Welcome ${found.name}! Signed in as Level ${found.hierarchyLevel} (${found.role}).`);
+  };
+
+  const handleSelectPreset = (preset) => {
+    setCurrentUser(preset);
+    setIsAuthenticated(true);
+    setLoginForm({ username: preset.username, password: '' });
+    if (preset.role === 'ZONAL_MANAGER' || preset.hierarchyLevel <= 3) {
+      setActiveTab('approvals');
+    } else {
+      setActiveTab('overview');
+    }
+    showToast(`Switched user to ${preset.name} (${preset.role})`);
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     setCurrentUser(null);
     setLoginForm({ username: '', password: '' });
-    showToast('Logged out successfully.');
   };
 
-  // Scoped Data Visibility Filters
+  // Scope Filtering
   const visibleSalons = salons.filter(s => {
     if (!currentUser) return false;
-    if (currentUser.hierarchyLevel <= 2) return true; // SuperAdmin & State Admin see all
+    if (currentUser.hierarchyLevel <= 2) return true; // Super & State Admin see all
     if (currentUser.role === 'ZONAL_MANAGER') return s.zoneId === currentUser.zoneId;
     if (currentUser.type === 'OWNER') return s.id === currentUser.salonId;
-    if (currentUser.type === 'STYLIST') return s.id === 'aaaa1111-aaaa-1111-aaaa-111111111111';
+    if (currentUser.type === 'STYLIST') return s.id === currentUser.salonId;
     return false;
   });
 
@@ -535,7 +631,10 @@ export default function App() {
     if (currentUser.hierarchyLevel <= 2) return true;
     if (currentUser.role === 'ZONAL_MANAGER') return b.zoneId === currentUser.zoneId;
     if (currentUser.type === 'OWNER') return b.salonId === currentUser.salonId;
-    if (currentUser.type === 'STYLIST') return true;
+    if (currentUser.type === 'STYLIST') {
+      const st = stylists.find(s => s.id === currentUser.stylistId);
+      return st ? b.id === st.branchId : false;
+    }
     return false;
   });
 
@@ -549,28 +648,94 @@ export default function App() {
 
   const visibleBookings = bookings.filter(b => {
     if (!currentUser) return false;
-    if (currentUser.hierarchyLevel <= 3) return true;
+    if (currentUser.hierarchyLevel <= 3) {
+      // Zonal Manager territorial scoping!
+      if (currentUser.role === 'ZONAL_MANAGER') {
+        const br = branches.find(branch => branch.id === b.branchId);
+        return br ? br.zoneId === currentUser.zoneId : true;
+      }
+      return true; // Super Admin & State Admin
+    }
     if (currentUser.type === 'OWNER') return b.salonId === currentUser.salonId;
     if (currentUser.type === 'STYLIST') return b.stylistId === currentUser.stylistId;
     return false;
   });
 
-  // Strict Downgrade Users List Only!
+  // Approvals items in scope for current management user
+  const pendingSalonsInScope = visibleSalons.filter(s => s.status === 'Pending');
+  const pendingBranchesInScope = visibleBranches.filter(b => b.status === 'Pending');
+  const pendingServicesInScope = masterServices.filter(s => s.approvalStatus === 'Pending_Approval');
+  const totalPendingApprovals = pendingSalonsInScope.length + pendingBranchesInScope.length + pendingServicesInScope.length;
+
+  // Strict Downgrade Users List
   const visibleDowngradeUsers = usersList.filter(u => {
     if (!currentUser) return false;
     return u.hierarchyLevel > currentUser.hierarchyLevel;
   });
 
-  // Governance notices relevant to active user
+  // Governance notices
   const relevantNotices = complianceNotices.filter(n => {
     if (!currentUser) return false;
-    if (currentUser.hierarchyLevel <= 3) return true; // Admins & Managers see all notices in scope
+    if (currentUser.hierarchyLevel <= 3) return true;
     if (currentUser.type === 'OWNER') return n.salonId === currentUser.salonId;
     if (currentUser.type === 'STYLIST') return n.targetType === 'STYLIST' && n.targetName.includes(currentUser.name);
     return false;
   });
 
-  // Toggle Active / DeActive by Level 2 & Level 3 Users
+  // ==========================================
+  // APPROVALS ACTIONS (MANAGEMENT LEVEL 1-3 ONLY)
+  // ==========================================
+  const handleApproveSalon = (salonId) => {
+    if (currentUser.hierarchyLevel > 3) {
+      showToast('Permission Denied: Only Zonal Managers and Admins can approve salon onboarding.');
+      return;
+    }
+    setSalons(prev => prev.map(s => s.id === salonId ? { ...s, status: 'Approved', rejectionReason: null } : s));
+    showToast('Salon registration APPROVED! Marketplace listing is now live.');
+  };
+
+  const handleOpenRejectModal = (type, id, name) => {
+    setRejectionModalData({ type, id, name });
+    setRejectionReasonInput('');
+  };
+
+  const handleConfirmRejection = () => {
+    if (!rejectionModalData) return;
+    const { type, id } = rejectionModalData;
+    const reason = rejectionReasonInput.trim() || 'Criteria not met or documents incomplete.';
+
+    if (type === 'SALON') {
+      setSalons(prev => prev.map(s => s.id === id ? { ...s, status: 'Rejected', rejectionReason: reason } : s));
+      showToast(`Salon registration rejected. Feedback delivered to applicant.`);
+    } else if (type === 'BRANCH') {
+      setBranches(prev => prev.map(b => b.id === id ? { ...b, status: 'Rejected', rejectionReason: reason } : b));
+      showToast(`Branch proposal rejected.`);
+    } else if (type === 'SERVICE') {
+      setMasterServices(prev => prev.map(svc => svc.id === id ? { ...svc, approvalStatus: 'Rejected', rejectionReason: reason } : svc));
+      showToast(`Custom service proposal rejected.`);
+    }
+    setRejectionModalData(null);
+  };
+
+  const handleApproveBranch = (branchId) => {
+    if (currentUser.hierarchyLevel > 3) {
+      showToast('Permission Denied: Only Management can approve branches.');
+      return;
+    }
+    setBranches(prev => prev.map(b => b.id === branchId ? { ...b, status: 'Approved' } : b));
+    showToast('Branch APPROVED! Now publicly discoverable.');
+  };
+
+  const handleApproveService = (serviceId) => {
+    if (currentUser.hierarchyLevel > 3) {
+      showToast('Permission Denied: Only Management can approve services.');
+      return;
+    }
+    setMasterServices(prev => prev.map(svc => svc.id === serviceId ? { ...svc, approvalStatus: 'Approved' } : svc));
+    showToast('Service APPROVED! Live in customer catalog.');
+  };
+
+  // Toggle Active/DeActive (L1, L2, L3)
   const handleToggleServiceActive = (serviceId) => {
     if (currentUser.hierarchyLevel > 3) {
       showToast('Permission Denied: Only Level 1, 2, and 3 users can toggle service status.');
@@ -586,7 +751,7 @@ export default function App() {
       return;
     }
     setBranches(prev => prev.map(b => b.id === branchId ? { ...b, isActive: !b.isActive } : b));
-    showToast('Branch Active/DeActive status updated. Reflected in portal!');
+    showToast('Branch Active/DeActive status updated.');
   };
 
   const handleToggleStylistActive = (stylistId) => {
@@ -595,7 +760,231 @@ export default function App() {
       return;
     }
     setStylists(prev => prev.map(st => st.id === stylistId ? { ...st, isActive: !st.isActive } : st));
-    showToast('Stylist Active/DeActive status updated. Reflected in portal!');
+    showToast('Stylist Active/DeActive status updated.');
+  };
+
+  // ==========================================
+  // BOOKING LIFECYCLE ACTIONS (STRICT SCOPE)
+  // ==========================================
+
+  // 1. Accept & Confirm Booking (Owner or Stylist Only!)
+  const handleAcceptBooking = (bookingId) => {
+    if (currentUser.hierarchyLevel <= 3) {
+      showToast('Scope Error: Management cannot accept/reject bookings. Only Salon Owner or Assigned Stylist can accept.');
+      return;
+    }
+    setBookings(prev => prev.map(b => {
+      if (b.id === bookingId) {
+        return {
+          ...b,
+          status: 'Confirmed',
+          confirmationStatus: 'Confirmed'
+        };
+      }
+      return b;
+    }));
+    showToast('Booking CONFIRMED! 6-digit Arrival OTP is now active for customer.');
+  };
+
+  // 2. Reject Booking (Owner or Stylist Only!)
+  const handleRejectBooking = (bookingId) => {
+    if (currentUser.hierarchyLevel <= 3) {
+      showToast('Scope Error: Only Salon Owner or Assigned Stylist can reject appointments.');
+      return;
+    }
+    setBookings(prev => prev.map(b => {
+      if (b.id === bookingId) {
+        return {
+          ...b,
+          status: 'Cancelled',
+          confirmationStatus: 'Rejected'
+        };
+      }
+      return b;
+    }));
+    showToast('Booking rejected. Customer notified and slot released.');
+  };
+
+  // 3. Owner Assigns Stylist to "Any Stylist" Booking
+  const handleOwnerAssignStylist = (bookingId, chosenStylistId) => {
+    const st = stylists.find(s => s.id === chosenStylistId);
+    if (!st) return;
+
+    setBookings(prev => prev.map(b => {
+      if (b.id === bookingId) {
+        return {
+          ...b,
+          stylistId: st.id,
+          stylist: st.name,
+          confirmationStatus: 'Confirmed',
+          status: 'Confirmed'
+        };
+      }
+      return b;
+    }));
+    showToast(`Stylist ${st.name} assigned! Booking confirmed and OTP unlocked.`);
+  };
+
+  // 4. OTP Verification (Owner & Stylist ONLY!)
+  const handleVerifyOtp = (bookingId, enteredOtp) => {
+    if (currentUser.hierarchyLevel <= 3) {
+      showToast('Permission Denied: Management users cannot verify check-in OTP. Only Salon Owner or Stylist can do this.');
+      return;
+    }
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
+    if (booking.otp === enteredOtp.trim()) {
+      setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'InProgress', isOtpVerified: true } : b));
+      showToast('OTP Verified! Service status updated to In-Progress.');
+    } else {
+      showToast('Invalid OTP. Please check code with customer.');
+    }
+  };
+
+  // 5. Complete Service & Execute Financial Ledger (Commission / Wallet)
+  const handleCompleteService = (bookingId) => {
+    if (currentUser.hierarchyLevel <= 3) {
+      showToast('Scope Error: Only Salon Owner or Stylist can mark appointment completed.');
+      return;
+    }
+    const targetBooking = bookings.find(b => b.id === bookingId);
+    if (!targetBooking) return;
+
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'Completed' } : b));
+
+    // Financial Execution: If Cash, deduct commission from Owner Wallet!
+    if (targetBooking.paymentMode === 'PAY_AT_SALON_CASH') {
+      const commission = targetBooking.netAmount * 0.10; // 10%
+      const gst = commission * 0.18; // 18% GST
+      const totalDebit = Number((commission + gst).toFixed(2));
+
+      setWallets(prev => {
+        const ownerSalId = targetBooking.salonId;
+        const currentW = prev[ownerSalId] || { balance: 2000 };
+        return {
+          ...prev,
+          [ownerSalId]: {
+            ...currentW,
+            balance: Number((currentW.balance - totalDebit).toFixed(2))
+          }
+        };
+      });
+
+      const newTx = {
+        id: `tx-${Date.now()}`,
+        salonId: targetBooking.salonId,
+        type: 'CASH_COMMISSION_DEBIT',
+        amount: -totalDebit,
+        desc: `Auto Commission (10% + 18% GST) for Cash Booking ${targetBooking.reference} (₹${targetBooking.netAmount})`,
+        date: 'Just now'
+      };
+      setWalletLedger(prev => [newTx, ...prev]);
+      showToast(`Appointment Completed! ₹${totalDebit} platform commission deducted from Owner Wallet.`);
+    } else {
+      showToast('Appointment Completed! Net earnings credited to Owner Escrow Ledger.');
+    }
+  };
+
+  // ==========================================
+  // SERVICE CREATION (BOTH ADMIN & OWNER)
+  // ==========================================
+  const handleCreateService = (e) => {
+    if (e) e.preventDefault();
+    if (!newServiceForm.name) {
+      showToast('Please enter service name.');
+      return;
+    }
+
+    const isManagement = currentUser.hierarchyLevel <= 3;
+    const baseP = Number(newServiceForm.basePrice) || 200;
+    const minP = Number(newServiceForm.minFloorPrice) || (baseP * 0.75);
+    const customP = Number(newServiceForm.customPrice) || baseP;
+
+    const svcObj = {
+      id: Date.now(),
+      name: newServiceForm.name,
+      category: newServiceForm.category,
+      duration: Number(newServiceForm.duration) || 30,
+      basePrice: baseP,
+      minFloorPrice: minP,
+      customPrice: customP,
+      salonId: isManagement ? null : currentUser.salonId,
+      submittedBy: isManagement ? `${currentUser.name} (Management)` : `${currentUser.name} (Owner)`,
+      targetBranchName: isManagement ? 'All Branches' : (branches.find(b => b.salonId === currentUser.salonId)?.branchName || 'Owner Branch'),
+      approvalStatus: isManagement ? 'Approved' : 'Pending_Approval', // Owners require Zonal Manager Approval!
+      isActive: true
+    };
+
+    setMasterServices([...masterServices, svcObj]);
+    setShowAddServiceModal(false);
+
+    if (isManagement) {
+      showToast(`Master Service "${svcObj.name}" created and live with floor price ₹${svcObj.minFloorPrice}!`);
+    } else {
+      showToast(`Custom Service "${svcObj.name}" submitted! Awaiting Zonal Manager approval before going live.`);
+    }
+  };
+
+  // Create Branch
+  const handleCreateBranch = (e) => {
+    if (e) e.preventDefault();
+    if (!newBranchForm.branchName || !newBranchForm.pocName || !newBranchForm.pocPhone) {
+      showToast('Please fill branch name and POC details.');
+      return;
+    }
+
+    const selCountry = countries.find(c => c.id === Number(newBranchForm.countryId)) || countries[0];
+    const selState = states.find(s => s.id === Number(newBranchForm.stateId)) || states[0];
+    const selZone = zones.find(z => z.id === Number(newBranchForm.zoneId)) || zones[0];
+    const selDistrict = districts.find(d => d.id === Number(newBranchForm.districtId)) || districts[0];
+
+    const branchObj = {
+      id: `b-${Date.now()}`,
+      salonId: currentUser.salonId || 'aaaa1111-aaaa-1111-aaaa-111111111111',
+      salonName: currentUser.salon || 'Royal Classic Unisex Salon',
+      branchName: newBranchForm.branchName,
+      countryId: selCountry.id, stateId: selState.id, zoneId: selZone.id, districtId: selDistrict.id,
+      country: selCountry.name, state: selState.name, zone: selZone.name, district: selDistrict.name,
+      locality: selDistrict.name,
+      addressLine: newBranchForm.addressLine || `${selDistrict.name} Main Road`,
+      phoneContact: newBranchForm.phoneContact || '+91 98421 99999',
+      isDoorstepEnabled: newBranchForm.isDoorstepEnabled,
+      status: currentUser.hierarchyLevel <= 3 ? 'Approved' : 'Pending', // Requires approval if created by owner
+      isActive: true,
+      pocName: newBranchForm.pocName,
+      pocPhone: newBranchForm.pocPhone,
+      pocEmail: newBranchForm.pocEmail || 'poc@stylebook.in',
+      pocRole: newBranchForm.pocRole || 'Branch In-Charge',
+      offeredServiceIds: newBranchForm.selectedServices
+    };
+
+    setBranches([...branches, branchObj]);
+    setShowAddBranchModal(false);
+    showToast(`Branch "${branchObj.branchName}" created! ${branchObj.status === 'Pending' ? 'Awaiting Zonal Manager approval.' : 'Now live.'}`);
+  };
+
+  // Top Up Wallet
+  const handleTopUpWallet = (amount) => {
+    const salId = currentUser.salonId || 'aaaa1111-aaaa-1111-aaaa-111111111111';
+    setWallets(prev => {
+      const cur = prev[salId] || { balance: 0 };
+      return {
+        ...prev,
+        [salId]: { ...cur, balance: cur.balance + amount }
+      };
+    });
+    const tx = {
+      id: `tx-${Date.now()}`,
+      salonId: salId,
+      type: 'WALLET_TOPUP',
+      amount: amount,
+      desc: `Prepaid Security Wallet Top-up of ₹${amount} via UPI`,
+      date: 'Just now'
+    };
+    setWalletLedger(prev => [tx, ...prev]);
+    setShowTopUpWalletModal(false);
+    showToast(`Wallet successfully topped up with ₹${amount}!`);
   };
 
   // Transfer Stylist (Owner Action)
@@ -618,506 +1007,208 @@ export default function App() {
     showToast(`Stylist transferred to ${targetBranch.branchName} successfully!`);
   };
 
-  // Stylist toggles own service capability (Select / Deselect)
-  const handleToggleStylistService = (serviceId) => {
-    setStylists(prev => prev.map(st => {
-      if (st.id === currentUser.stylistId) {
-        const has = st.supportedServiceIds.includes(serviceId);
-        const updated = has 
-          ? st.supportedServiceIds.filter(id => id !== serviceId)
-          : [...st.supportedServiceIds, serviceId];
-        return { ...st, supportedServiceIds: updated };
-      }
-      return st;
-    }));
-    showToast('Your supported service capabilities have been updated!');
-  };
-
-  // Owner Assigns Stylist to "Any Stylist" Booking
-  const handleOwnerAssignStylist = (bookingId, chosenStylistId) => {
-    const st = stylists.find(s => s.id === chosenStylistId);
-    if (!st) return;
-
-    setBookings(prev => prev.map(b => {
-      if (b.id === bookingId) {
-        return {
-          ...b,
-          stylistId: st.id,
-          stylist: st.name,
-          confirmationStatus: 'Confirmed',
-          status: 'Confirmed'
-        };
-      }
-      return b;
-    }));
-    showToast(`Stylist ${st.name} assigned! Booking confirmed.`);
-  };
-
-  // OTP Verification Handshake (Owner & Stylist only)
-  const handleVerifyOtp = (bookingId, enteredOtp) => {
-    const booking = bookings.find(b => b.id === bookingId);
-    if (!booking) return;
-
-    if (booking.otp === enteredOtp.trim()) {
-      setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'InProgress', isOtpVerified: true } : b));
-      showToast('OTP Verified! Service status updated to InProgress.');
-    } else {
-      showToast('Invalid OTP. Please check code with customer.');
-    }
-  };
-
-  const handleCompleteService = (bookingId) => {
-    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'Completed' } : b));
-    showToast('Service Marked as Completed! Customer verified review unlocked.');
-  };
-
-  // Create Branch (with Country -> State -> Zone -> District)
-  const handleCreateBranch = (e) => {
-    if (e) e.preventDefault();
-    if (!newBranchForm.branchName || !newBranchForm.pocName || !newBranchForm.pocPhone) {
-      showToast('Please fill all branch details and the mandatory Site POC person!');
-      return;
-    }
-
-    const selCountry = countries.find(c => c.id === Number(newBranchForm.countryId)) || countries[0];
-    const selState = states.find(s => s.id === Number(newBranchForm.stateId)) || states[0];
-    const selZone = zones.find(z => z.id === Number(newBranchForm.zoneId)) || zones[0];
-    const selDistrict = districts.find(d => d.id === Number(newBranchForm.districtId)) || districts[0];
-
-    const branchObj = {
-      id: `b-${Date.now()}`,
-      salonId: currentUser.salonId || 'aaaa1111-aaaa-1111-aaaa-111111111111',
-      salonName: currentUser.salon || 'Royal Classic Unisex Salon',
-      branchName: newBranchForm.branchName,
-      countryId: selCountry.id, stateId: selState.id, zoneId: selZone.id, districtId: selDistrict.id,
-      country: selCountry.name, state: selState.name, zone: selZone.name, district: selDistrict.name,
-      locality: selDistrict.name,
-      addressLine: newBranchForm.addressLine || `${selDistrict.name} Main Road`,
-      phoneContact: newBranchForm.phoneContact || '+91 98421 99999',
-      isDoorstepEnabled: newBranchForm.isDoorstepEnabled,
-      isActive: true,
-      pocName: newBranchForm.pocName,
-      pocPhone: newBranchForm.pocPhone,
-      pocEmail: newBranchForm.pocEmail || 'poc@stylebook.in',
-      pocRole: newBranchForm.pocRole || 'Branch In-Charge',
-      offeredServiceIds: newBranchForm.selectedServices
-    };
-
-    setBranches([...branches, branchObj]);
-    setShowAddBranchModal(false);
-    showToast(`Branch "${branchObj.branchName}" created in ${branchObj.district}, ${branchObj.country}!`);
-  };
-
-  // Add Stylist (with Branch & Multi-select Services)
-  const handleAddStylist = (e) => {
-    if (e) e.preventDefault();
-    if (!newStylistForm.name) {
-      showToast('Please enter stylist name.');
-      return;
-    }
-
-    const targetBranch = branches.find(b => b.id === newStylistForm.branchId) || branches[0];
-
-    const stylistObj = {
-      id: `c-${Date.now()}`,
-      salonId: currentUser.salonId || 'aaaa1111-aaaa-1111-aaaa-111111111111',
-      name: newStylistForm.name,
-      specialization: newStylistForm.specialization,
-      branchId: targetBranch.id,
-      branch: targetBranch.branchName,
-      supportedServiceIds: newStylistForm.selectedServices,
-      doorstepEnabled: newStylistForm.doorstepEnabled,
-      doorstepRadiusKm: Number(newStylistForm.doorstepRadiusKm),
-      shiftToday: '09:00 AM - 08:00 PM (Lunch 01:00 PM - 02:00 PM)',
-      rating: 5.0,
-      totalReviews: 0,
-      isActive: true
-    };
-
-    setStylists([...stylists, stylistObj]);
-    setShowAddStylistModal(false);
-    showToast(`Stylist "${stylistObj.name}" onboarded with ${stylistObj.supportedServiceIds.length} skills!`);
-  };
-
-  // Add Master Service (Level 1, 2, 3 Floor Price Authority)
-  const handleAddMasterService = (e) => {
-    if (e) e.preventDefault();
-    if (!newServiceForm.name) {
-      showToast('Please enter service name.');
-      return;
-    }
-
-    const svcObj = {
-      id: Date.now(),
-      name: newServiceForm.name,
-      category: newServiceForm.category,
-      duration: Number(newServiceForm.duration),
-      basePrice: Number(newServiceForm.basePrice),
-      minFloorPrice: Number(newServiceForm.minFloorPrice),
-      isActive: true
-    };
-
-    setMasterServices([...masterServices, svcObj]);
-    setShowAddServiceModal(false);
-    showToast(`New Service "${svcObj.name}" added with Minimum Floor Price ₹${svcObj.minFloorPrice}!`);
-  };
-
-  // Issue Compliance Notice (to Stylist / Owner / Branch / Customer)
-  const handleIssueNotice = (e) => {
-    if (e) e.preventDefault();
-    if (!newNoticeForm.subject || !newNoticeForm.description) {
-      showToast('Please fill subject and description.');
-      return;
-    }
-
-    const noticeObj = {
-      id: `not-${Date.now()}`,
-      targetType: newNoticeForm.targetType,
-      targetName: newNoticeForm.targetName || 'Royal Classic - Ramnad Town Branch',
-      salonId: newNoticeForm.salonId,
-      branchId: newNoticeForm.branchId,
-      issuedBy: currentUser.name,
-      category: newNoticeForm.category,
-      subject: newNoticeForm.subject,
-      description: newNoticeForm.description,
-      gracePeriodHours: Number(newNoticeForm.gracePeriodHours),
-      status: 'NOTICE_ISSUED',
-      ownerReply: null,
-      issuedDate: 'Today, 25 Oct 2026'
-    };
-
-    setComplianceNotices([noticeObj, ...complianceNotices]);
-    setShowIssueNoticeModal(false);
-    showToast(`Notice issued to ${noticeObj.targetType}: ${noticeObj.targetName}!`);
-  };
-
-  // Owner submits explanation
-  const handleSubmitOwnerReply = (noticeId) => {
-    if (!ownerReplyText.trim()) {
-      showToast('Please enter your explanation.');
-      return;
-    }
-
-    setComplianceNotices(prev => prev.map(n => n.id === noticeId ? { ...n, status: 'OWNER_REPLIED', ownerReply: ownerReplyText } : n));
-    setShowOwnerReplyModal(null);
-    setOwnerReplyText('');
-    showToast('Official explanation submitted to Management for review.');
-  };
-
-  // Create Master Geography (Super Admin: Country, Admin: State/Zone/District)
-  const handleCreateGeography = (e) => {
-    if (e) e.preventDefault();
-    if (newGeoForm.type === 'COUNTRY' && newGeoForm.countryName) {
-      const c = { id: Date.now(), name: newGeoForm.countryName, iso: newGeoForm.iso || 'NEW', phoneCode: newGeoForm.phoneCode || '+99' };
-      setCountries([...countries, c]);
-      showToast(`Country "${c.name}" added!`);
-    } else if (newGeoForm.type === 'STATE' && newGeoForm.stateName) {
-      const s = { id: Date.now(), countryId: 1, name: newGeoForm.stateName, code: 'ST' };
-      setStates([...states, s]);
-      showToast(`State "${s.name}" added under India!`);
-    } else if (newGeoForm.type === 'ZONE' && newGeoForm.zoneName) {
-      const z = { id: Date.now(), stateId: 1, name: newGeoForm.zoneName };
-      setZones([...zones, z]);
-      showToast(`Zone "${z.name}" added under Tamil Nadu!`);
-    } else if (newGeoForm.type === 'DISTRICT' && newGeoForm.districtName) {
-      const d = { id: Date.now(), zoneId: 1, name: newGeoForm.districtName };
-      setDistricts([...districts, d]);
-      showToast(`District "${d.name}" added under Zone 1!`);
-    }
-    setShowCreateGeoModal(false);
-  };
-
-  // Shift Adjustment (Owner and Stylist action)
-  const handleSaveShiftAdjustment = (e) => {
-    if (e) e.preventDefault();
-    setStylists(prev => prev.map(st => {
-      if (st.id === shiftAdjustmentForm.stylistId || (currentUser.type === 'STYLIST' && st.id === currentUser.stylistId)) {
-        return {
-          ...st,
-          shiftToday: `${shiftAdjustmentForm.newStartTime} - ${shiftAdjustmentForm.newEndTime} (Adjusted Lunch: ${shiftAdjustmentForm.newLunchStart} - ${shiftAdjustmentForm.newLunchEnd})`
-        };
-      }
-      return st;
-    }));
-    setShowShiftAdjustmentModal(false);
-    showToast('Shift timing adjustment updated successfully!');
-  };
-
-  // MANDATORY LOGIN GATE
-  if (!isAuthenticated) {
+  // ==========================================
+  // RENDER LOGIN SCREEN (IF NOT AUTHENTICATED)
+  // ==========================================
+  if (!isAuthenticated || !currentUser) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #090e24 0%, #0d153a 50%, #172554 100%)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, color: '#f8fafc'
-      }}>
-        <div style={{ width: '100%', maxWidth: 540, background: '#111c44', border: '1px solid #1e295d', borderRadius: 16, padding: 32, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
-          
+      <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top right, #1e1b4b, #0f172a)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'system-ui, sans-serif', color: '#f8fafc' }}>
+        <div style={{ width: '100%', maxWidth: 480, background: '#111827', border: '1px solid #1f2937', borderRadius: 16, padding: 32, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <div style={{ width: 56, height: 56, borderRadius: 14, background: 'linear-gradient(135deg, #2563eb, #8b5cf6)', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 56, height: 56, background: '#7c3aed', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
               <Scissors size={28} color="#fff" />
             </div>
-            <h1 style={{ fontSize: 24, fontWeight: 900 }}>StyleBook Enterprise Management</h1>
-            <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>
-              Multi-Region Territorial RBAC & Salon Operations Workspace
-            </p>
-          </div>
-
-          {/* Dev Mode Banner & Security Environment Controls */}
-          <div style={{ background: '#1c1917', border: '1px solid #78350f', borderRadius: 10, padding: 12, marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <AlertTriangle size={16} color="#f59e0b" />
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase' }}>
-                  {isDevMode ? '⚠️ Dev Environment Active' : '🔒 Production Security Active'}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsDevMode(!isDevMode)}
-                style={{ background: isDevMode ? '#451a03' : '#1e3a8a', border: '1px solid', borderColor: isDevMode ? '#b45309' : '#3b82f6', color: '#fff', padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}
-              >
-                {isDevMode ? 'Preview Production Mode' : 'Switch to Dev Mode'}
-              </button>
-            </div>
-            <p style={{ fontSize: 11, color: '#d6d3d1', marginTop: 6, lineHeight: 1.4 }}>
-              {isDevMode 
-                ? 'Quick 1-click test credentials are enabled below for local evaluation. In Production builds, these are automatically stripped.'
-                : 'Production Mode Active: All 1-click bypasses are removed. Access strictly requires verified credentials.'}
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>StyleBook Management Portal</h1>
+            <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+              Multi-Scope Governance, Approvals & Operations Engine
             </p>
           </div>
 
           {loginError && (
-            <div style={{ background: '#450a0a', border: '1px solid #991b1b', color: '#f87171', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
+            <div style={{ background: '#7f1d1d', border: '1px solid #ef4444', color: '#fecaca', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
               {loginError}
             </div>
           )}
 
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Username or Email</label>
-              <input 
-                type="text" 
-                placeholder="superadmin, admin_tamilnadu, zonal_ramnad, owner_anwar..."
-                value={loginForm.username}
-                onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                style={{ width: '100%', padding: '11px 14px', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#fff', marginTop: 4, fontSize: 13 }}
-              />
-            </div>
-
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Password</label>
-                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: 11, cursor: 'pointer' }}>
-                  {showPassword ? 'Hide' : 'Show'}
+          <div style={{ marginTop: 20 }}>
+            <span style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>
+              Quick One-Click Test Role Login:
+            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+              {PRESET_USERS.map(user => (
+                <button
+                  key={user.username}
+                  onClick={() => handleSelectPreset(user)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 14px',
+                    background: user.role === 'ZONAL_MANAGER' ? '#1e1b4b' : (user.type === 'OWNER' ? '#0f2922' : '#1f2937'),
+                    border: user.role === 'ZONAL_MANAGER' ? '1px solid #6366f1' : '1px solid #374151',
+                    borderRadius: 8,
+                    color: '#f8fafc',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    fontWeight: 600
+                  }}
+                >
+                  <div>
+                    <div>{user.label}</div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{user.jurisdiction}</div>
+                  </div>
+                  <ArrowRight size={14} color="#a5b4fc" />
                 </button>
-              </div>
-              <input 
-                type={showPassword ? 'text' : 'password'} 
-                placeholder="Enter password (default: Password@123)"
-                value={loginForm.password}
-                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                style={{ width: '100%', padding: '11px 14px', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#fff', marginTop: 4, fontSize: 13 }}
-              />
+              ))}
             </div>
-
-            <button type="submit" style={{ width: '100%', background: '#2563eb', color: '#fff', padding: '12px', borderRadius: 8, fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}>
-              Secure Login to Workspace
-            </button>
-          </form>
-
-          {isDevMode && (
-            <div style={{ marginTop: 24, paddingTop: 18, borderTop: '1px solid #1e295d' }}>
-              <p style={{ fontSize: 11, fontWeight: 800, color: '#38bdf8', textTransform: 'uppercase', marginBottom: 10, textAlign: 'center' }}>
-                ⚡ Dev 1-Click Role Logins (Tamil Nadu Hierarchy)
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {PRESET_USERS.map(u => (
-                  <button
-                    key={u.username}
-                    onClick={() => {
-                      setCurrentUser(u);
-                      setIsAuthenticated(true);
-                      showToast(`Logged in as ${u.name} (${u.label})`);
-                    }}
-                    style={{ background: '#182559', border: '1px solid #233575', color: '#cbd5e1', padding: '8px 12px', borderRadius: 8, fontSize: 12, textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-                  >
-                    <span style={{ fontWeight: 600 }}>{u.label}</span>
-                    <span style={{ color: '#38bdf8', fontSize: 11 }}>Login &rarr;</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
+          </div>
         </div>
       </div>
     );
   }
 
-  // AUTHENTICATED WORKSPACE
+  // Active Salon Wallet Data for current owner
+  const currentOwnerWallet = currentUser.salonId ? (wallets[currentUser.salonId] || { balance: 2500, membershipPlan: 'Pro Growth', commissionRate: 8, negativeCreditLimit: -2000 }) : null;
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0b1329', color: '#f8fafc' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#0b1120', color: '#f8fafc', fontFamily: 'system-ui, sans-serif' }}>
       
       {/* Toast Notification */}
       {notificationMsg && (
-        <div style={{
-          position: 'fixed', top: 20, right: 20, background: '#10b981', color: '#ffffff',
-          padding: '12px 20px', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-          zIndex: 99999, display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600
-        }}>
-          <Sparkles size={18} />
-          {notificationMsg}
+        <div style={{ position: 'fixed', top: 20, right: 20, background: '#10b981', color: '#fff', padding: '12px 20px', borderRadius: 8, fontWeight: 700, zIndex: 99999, boxShadow: '0 10px 25px rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <CheckCircle2 size={18} /> {notificationMsg}
         </div>
       )}
 
-      {/* Sidebar Navigation */}
-      <div style={{ width: 290, background: '#111c44', borderRight: '1px solid #1e295d', display: 'flex', flexDirection: 'column' }}>
+      {/* Sidebar */}
+      <div style={{ width: 280, background: '#0f172a', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
         
-        <div style={{ padding: '24px 20px', borderBottom: '1px solid #1e295d' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Scissors size={20} color="#fff" />
-            </div>
-            <div>
-              <h2 style={{ fontSize: 18, fontWeight: 800 }}>StyleBook</h2>
-              <span style={{ fontSize: 10, color: '#38bdf8', fontWeight: 700, textTransform: 'uppercase' }}>Enterprise Operations</span>
-            </div>
+        {/* Brand Header */}
+        <div style={{ padding: '20px 16px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 40, height: 40, background: '#7c3aed', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Scissors size={20} color="#fff" />
+          </div>
+          <div>
+            <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: '#fff' }}>StyleBook</h2>
+            <span style={{ fontSize: 11, color: '#38bdf8', fontWeight: 700 }}>
+              {currentUser.role} (Level {currentUser.hierarchyLevel})
+            </span>
           </div>
         </div>
 
-        {/* User Scope Box */}
-        <div style={{ padding: '16px 18px', background: '#182559', margin: '12px 14px', borderRadius: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Actor Profile</span>
-            <span style={{ background: '#0284c7', color: '#fff', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>Level {currentUser.hierarchyLevel}: {currentUser.role}</span>
-          </div>
-          <p style={{ fontSize: 14, fontWeight: 700, marginTop: 4 }}>{currentUser.name}</p>
-          <p style={{ fontSize: 11, color: '#38bdf8', marginTop: 2 }}>
-            {currentUser.jurisdiction || currentUser.salon}
-          </p>
+        {/* Current User Pill */}
+        <div style={{ padding: '12px 16px', background: '#1e293b', margin: 12, borderRadius: 8, fontSize: 12 }}>
+          <div style={{ fontWeight: 700, color: '#f8fafc' }}>{currentUser.name}</div>
+          <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 2 }}>{currentUser.jurisdiction}</div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div style={{ padding: '8px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {/* Navigation Items */}
+        <div style={{ flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' }}>
           
           <button 
             onClick={() => setActiveTab('overview')} 
-            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'overview' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'overview' ? '#7c3aed' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
           >
-            <ShieldCheck size={18} /> Overview & Scoped KPIs
+            <Building size={18} /> Dashboard Overview
           </button>
 
-          {/* Master Geography (Super Admin & State Admin) */}
-          {currentUser.hierarchyLevel <= 2 && (
-            <button 
-              onClick={() => setActiveTab('geography')} 
-              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'geography' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
-            >
-              <Globe size={18} /> Master Geographies ({countries.length})
-            </button>
-          )}
-
-          {/* User Provisioning Tab (Super Admin, State Admin, Zonal Manager) */}
+          {/* APPROVALS TAB (MANAGEMENT LEVEL 1-3) */}
           {currentUser.hierarchyLevel <= 3 && (
             <button 
-              onClick={() => setActiveTab('users')} 
-              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'users' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
-            >
-              <Users size={18} /> User Provisioning (Downgrade)
-            </button>
-          )}
-
-          {/* Salons & Approvals (Management) */}
-          {currentUser.type === 'MANAGEMENT' && (
-            <button 
               onClick={() => setActiveTab('approvals')} 
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'approvals' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'approvals' ? '#7c3aed' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <CheckCircle2 size={18} /> Salons & Approvals
+                <CheckSquare size={18} /> Approvals & Reviews
               </div>
-              <span style={{ background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>
-                {visibleSalons.filter(s => s.status === 'Pending').length} Pending
-              </span>
+              {totalPendingApprovals > 0 && (
+                <span style={{ background: '#f59e0b', color: '#000', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 800 }}>
+                  {totalPendingApprovals}
+                </span>
+              )}
             </button>
           )}
 
-          {/* Governance & Notices */}
+          {/* Services & Custom Catalog */}
           <button 
-            onClick={() => setActiveTab('governance')} 
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'governance' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+            onClick={() => setActiveTab('pricing')} 
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'pricing' ? '#7c3aed' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <ShieldAlert size={18} /> Governance & Notices
+              <Tag size={18} /> Services & Pricing
             </div>
-            {relevantNotices.filter(n => n.status !== 'RESOLVED').length > 0 && (
-              <span style={{ background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>
-                {relevantNotices.filter(n => n.status !== 'RESOLVED').length} Active
+            {masterServices.filter(s => s.approvalStatus === 'Pending_Approval').length > 0 && (
+              <span style={{ background: '#3b82f6', color: '#fff', padding: '2px 6px', borderRadius: 8, fontSize: 10, fontWeight: 700 }}>
+                {masterServices.filter(s => s.approvalStatus === 'Pending_Approval').length} Req
               </span>
             )}
           </button>
 
-          {/* Branches & POCs (Management & Owners) */}
-          {currentUser.type !== 'STYLIST' && (
-            <button 
-              onClick={() => setActiveTab('branches')} 
-              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'branches' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
-            >
-              <Store size={18} /> Branches & POCs ({visibleBranches.length})
-            </button>
-          )}
-
-          {/* Stylist Rosters & Skills */}
-          {currentUser.type !== 'CUSTOMER' && (
-            <button 
-              onClick={() => setActiveTab('stylists')} 
-              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'stylists' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
-            >
-              <Scissors size={18} /> Stylists & Skills ({visibleStylists.length})
-            </button>
-          )}
-
-          {/* Services & Floor Pricing (Floor price set by L1, L2, L3) */}
+          {/* Branches & Salons */}
           <button 
-            onClick={() => setActiveTab('pricing')} 
-            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'pricing' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+            onClick={() => setActiveTab('branches')} 
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'branches' ? '#7c3aed' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
           >
-            <DollarSign size={18} /> Catalog & Floor Pricing
+            <Store size={18} /> Branches & Salons ({visibleBranches.length})
           </button>
 
-          {/* Bookings & Check-in OTP (Owners and Stylists do Booking Management) */}
+          {/* Stylists & Rosters */}
+          <button 
+            onClick={() => setActiveTab('stylists')} 
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'stylists' ? '#7c3aed' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+          >
+            <Scissors size={18} /> Stylists & Skills ({visibleStylists.length})
+          </button>
+
+          {/* Bookings & Check-in OTP */}
           <button 
             onClick={() => setActiveTab('bookings')} 
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'bookings' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'bookings' ? '#7c3aed' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Calendar size={18} /> Bookings & Check-In OTP
+              <Calendar size={18} /> Bookings & Check-in
             </div>
             <span style={{ background: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>
               {visibleBookings.length}
             </span>
           </button>
 
-          {/* Reviews & Ratings Tab */}
+          {/* WALLET & FINANCIAL ACCOUNTING TAB */}
           <button 
-            onClick={() => setActiveTab('reviews')} 
-            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'reviews' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+            onClick={() => setActiveTab('wallet')} 
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'wallet' ? '#7c3aed' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
           >
-            <Sparkles size={18} /> Verified Reviews ({reviews.length})
+            <Wallet size={18} /> Wallets & Financials
           </button>
 
-          {/* Help Desk / Contact Us Directory */}
+          {/* Governance & Notices */}
+          <button 
+            onClick={() => setActiveTab('governance')} 
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'governance' ? '#7c3aed' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <ShieldAlert size={18} /> Governance & Notices
+            </div>
+            {relevantNotices.filter(n => n.status !== 'RESOLVED').length > 0 && (
+              <span style={{ background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>
+                {relevantNotices.filter(n => n.status !== 'RESOLVED').length}
+              </span>
+            )}
+          </button>
+
+          {/* Help Desk & POC Directory */}
           <button 
             onClick={() => setActiveTab('helpdesk')} 
-            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'helpdesk' ? '#2563eb' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, textAlign: 'left', background: activeTab === 'helpdesk' ? '#7c3aed' : 'transparent', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer' }}
           >
             <HelpCircle size={18} /> Help Desk & POCs
           </button>
 
         </div>
 
-        <div style={{ padding: 16, borderTop: '1px solid #1e295d' }}>
+        {/* User Signout */}
+        <div style={{ padding: 16, borderTop: '1px solid #1e293b' }}>
           <button 
             onClick={handleLogout}
             style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: '#1f2937', color: '#f87171', borderRadius: 8, fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer' }}
@@ -1125,479 +1216,319 @@ export default function App() {
             <LogOut size={16} /> Sign Out of Platform
           </button>
         </div>
-
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content Viewport */}
       <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
-        
-        {/* Urgent Relevant Notice Alert on Home Page */}
-        {relevantNotices.filter(n => n.status !== 'RESOLVED').length > 0 && (
-          <div style={{ background: '#450a0a', border: '1px solid #ef4444', borderRadius: 10, padding: 16, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <AlertTriangle size={24} color="#f87171" />
-              <div>
-                <h4 style={{ fontSize: 15, fontWeight: 800, color: '#fca5a5' }}>
-                  URGENT COMPLIANCE NOTICE: Addressed to {relevantNotices[0].targetType} ({relevantNotices[0].targetName})
-                </h4>
-                <p style={{ fontSize: 12, color: '#fecaca', marginTop: 2 }}>
-                  {relevantNotices[0].subject} — Please submit your response within the grace period.
-                </p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setActiveTab('governance')}
-              style={{ background: '#ef4444', color: '#fff', padding: '8px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
-            >
-              View Notice &rarr;
-            </button>
-          </div>
-        )}
 
         {/* TAB 1: OVERVIEW */}
         {activeTab === 'overview' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <div>
-                <h1 style={{ fontSize: 26, fontWeight: 900 }}>Workspace Dashboard</h1>
-                <p style={{ color: '#94a3b8', fontSize: 14 }}>
-                  Territory: <strong>{currentUser.jurisdiction || currentUser.salon}</strong>
+                <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Operational Dashboard</h1>
+                <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+                  Territorial Scope: <strong>{currentUser.jurisdiction}</strong> &bull; User: <strong>{currentUser.name}</strong>
                 </p>
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                {currentUser.hierarchyLevel <= 3 && (
-                  <button 
-                    onClick={() => setShowAddServiceModal(true)}
-                    style={{ background: '#0284c7', color: '#fff', padding: '9px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer' }}
-                  >
-                    <Plus size={16} /> New Service & Floor Price
-                  </button>
-                )}
                 {currentUser.type === 'OWNER' && (
                   <button 
-                    onClick={() => setShowAddBranchModal(true)}
-                    style={{ background: '#2563eb', color: '#fff', padding: '9px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer' }}
+                    onClick={() => setShowAddServiceModal(true)}
+                    style={{ background: '#7c3aed', color: '#fff', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
                   >
-                    <Plus size={16} /> New Branch (Country/State/Zone)
+                    <Plus size={16} /> Request Custom Service
+                  </button>
+                )}
+                {currentUser.hierarchyLevel <= 3 && (
+                  <button 
+                    onClick={() => setActiveTab('approvals')}
+                    style={{ background: '#f59e0b', color: '#000', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <CheckSquare size={16} /> Pending Approvals ({totalPendingApprovals})
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Metric KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18, marginTop: 24 }}>
-              <div style={{ background: '#111c44', padding: 20, borderRadius: 12, border: '1px solid #1e295d' }}>
-                <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Scoped Salons</span>
+            {/* Metrics Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+              <div style={{ background: '#1e293b', padding: 20, borderRadius: 12, border: '1px solid #334155' }}>
+                <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Salons in Scope</span>
                 <h3 style={{ fontSize: 28, fontWeight: 900, marginTop: 6, color: '#38bdf8' }}>{visibleSalons.length}</h3>
-                <span style={{ fontSize: 11, color: '#10b981' }}>{visibleSalons.filter(s => s.status === 'Approved').length} Live Approved</span>
+                <span style={{ fontSize: 11, color: '#10b981' }}>{visibleSalons.filter(s => s.status === 'Approved').length} Approved & Live</span>
               </div>
-              <div style={{ background: '#111c44', padding: 20, borderRadius: 12, border: '1px solid #1e295d' }}>
-                <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Active Branches</span>
-                <h3 style={{ fontSize: 28, fontWeight: 900, marginTop: 6, color: '#a78bfa' }}>{visibleBranches.filter(b => b.isActive).length}</h3>
-                <span style={{ fontSize: 11, color: '#cbd5e1' }}>100% with Help Desk POC</span>
+              <div style={{ background: '#1e293b', padding: 20, borderRadius: 12, border: '1px solid #334155' }}>
+                <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Branches</span>
+                <h3 style={{ fontSize: 28, fontWeight: 900, marginTop: 6, color: '#a78bfa' }}>{visibleBranches.length}</h3>
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>Physical & Doorstep</span>
               </div>
-              <div style={{ background: '#111c44', padding: 20, borderRadius: 12, border: '1px solid #1e295d' }}>
-                <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Active Stylists</span>
-                <h3 style={{ fontSize: 28, fontWeight: 900, marginTop: 6, color: '#f59e0b' }}>{visibleStylists.filter(st => st.isActive).length}</h3>
-                <span style={{ fontSize: 11, color: '#cbd5e1' }}>Multi-Skill Assigned</span>
+              <div style={{ background: '#1e293b', padding: 20, borderRadius: 12, border: '1px solid #334155' }}>
+                <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Staff Stylists</span>
+                <h3 style={{ fontSize: 28, fontWeight: 900, marginTop: 6, color: '#f472b6' }}>{visibleStylists.length}</h3>
+                <span style={{ fontSize: 11, color: '#10b981' }}>Rostered & Active</span>
               </div>
-              <div style={{ background: '#111c44', padding: 20, borderRadius: 12, border: '1px solid #1e295d' }}>
-                <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Active Bookings</span>
-                <h3 style={{ fontSize: 28, fontWeight: 900, marginTop: 6, color: '#10b981' }}>{visibleBookings.length}</h3>
-                <span style={{ fontSize: 11, color: '#38bdf8' }}>6-Digit OTP Protected</span>
-              </div>
-            </div>
-
-            {/* Role Responsibilities Summary Card */}
-            <div style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 24, marginTop: 24 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: '#38bdf8' }}>Enterprise Rules & Operational Scope</h3>
-              <ul style={{ fontSize: 13, color: '#cbd5e1', marginTop: 10, lineHeight: 1.8, paddingLeft: 20 }}>
-                <li><strong>Owners & Stylists Scope:</strong> Owners and Stylists exclusively handle appointment management (Verify and Start via 6-digit OTP) and Shift Adjustments.</li>
-                <li><strong>Active / DeActive Authority:</strong> Level 2 (State Admin) and Level 3 (Zonal Manager) users have direct authority to toggle Active/DeActive for any Service, Stylist, or Branch. Only Active items reflect in Customer Web.</li>
-                <li><strong>Hierarchical Multi-Region Scaling:</strong> Branches are bound to Country $\to$ State $\to$ Zone $\to$ District for worldwide scalability.</li>
-                <li><strong>Dual Booking Entry Points:</strong> Customers can book by selecting a <em>Branch</em> or a <em>Stylist</em>. If customer selects "Any Stylist", the Owner allocates the stylist upon confirmation.</li>
-                <li><strong>Floor Price Authority:</strong> Level 1, 2, and 3 users configure standard Minimum Floor Prices to prevent predatory price cutting.</li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: MASTER GEOGRAPHIES (SUPER ADMIN & STATE ADMIN) */}
-        {activeTab === 'geography' && currentUser.hierarchyLevel <= 2 && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h1 style={{ fontSize: 24, fontWeight: 900 }}>Master Geographies & Global Hierarchy</h1>
-                <p style={{ color: '#94a3b8', fontSize: 13 }}>
-                  Super Admin provisions Countries; Country Admins provision States, Zones, and Districts.
-                </p>
-              </div>
-              <button 
-                onClick={() => setShowCreateGeoModal(true)}
-                style={{ background: '#2563eb', color: '#fff', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer' }}
-              >
-                <Plus size={16} /> Add Geography Unit
-              </button>
-            </div>
-
-            {/* Geographical Tree Table */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginTop: 20 }}>
-              <div style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 18 }}>
-                <h4 style={{ fontSize: 15, fontWeight: 800, color: '#38bdf8' }}>Countries ({countries.length})</h4>
-                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {countries.map(c => (
-                    <div key={c.id} style={{ background: '#182559', padding: '8px 12px', borderRadius: 6, fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
-                      <span>{c.name}</span>
-                      <code style={{ color: '#38bdf8' }}>{c.iso}</code>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 18 }}>
-                <h4 style={{ fontSize: 15, fontWeight: 800, color: '#a78bfa' }}>States ({states.length})</h4>
-                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {states.map(s => (
-                    <div key={s.id} style={{ background: '#182559', padding: '8px 12px', borderRadius: 6, fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
-                      <span>{s.name}</span>
-                      <code style={{ color: '#a78bfa' }}>{s.code}</code>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 18 }}>
-                <h4 style={{ fontSize: 15, fontWeight: 800, color: '#f59e0b' }}>Zones ({zones.length})</h4>
-                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {zones.map(z => (
-                    <div key={z.id} style={{ background: '#182559', padding: '8px 12px', borderRadius: 6, fontSize: 13 }}>
-                      <span>{z.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 18 }}>
-                <h4 style={{ fontSize: 15, fontWeight: 800, color: '#10b981' }}>Districts / Towns ({districts.length})</h4>
-                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {districts.map(d => (
-                    <div key={d.id} style={{ background: '#182559', padding: '8px 12px', borderRadius: 6, fontSize: 13 }}>
-                      <span>{d.name}</span>
-                    </div>
-                  ))}
-                </div>
+              <div style={{ background: '#1e293b', padding: 20, borderRadius: 12, border: '1px solid #334155' }}>
+                <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Bookings</span>
+                <h3 style={{ fontSize: 28, fontWeight: 900, marginTop: 6, color: '#34d399' }}>{visibleBookings.length}</h3>
+                <span style={{ fontSize: 11, color: '#f59e0b' }}>{visibleBookings.filter(b => b.status === 'PendingConfirmation').length} Awaiting Confirmation</span>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* TAB 3: USER PROVISIONING & DOWNGRADE LIST ONLY */}
-        {activeTab === 'users' && currentUser.hierarchyLevel <= 3 && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h1 style={{ fontSize: 24, fontWeight: 900 }}>User Provisioning & Downgrade User Directory</h1>
-                <p style={{ color: '#94a3b8', fontSize: 13 }}>
-                  Strict Governance: Showing <strong>strictly downgrade users</strong> under Level {currentUser.hierarchyLevel} ({currentUser.role}).
-                </p>
-              </div>
-              <button 
-                onClick={() => setShowCreateUserModal(true)}
-                style={{ background: '#2563eb', color: '#fff', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer' }}
-              >
-                <Plus size={16} /> Create Downgrade User
-              </button>
-            </div>
-
-            <div style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', marginTop: 20, overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: '#182559', color: '#94a3b8', borderBottom: '1px solid #233575' }}>
-                    <th style={{ padding: '12px 16px' }}>Full Name</th>
-                    <th style={{ padding: '12px 16px' }}>Username</th>
-                    <th style={{ padding: '12px 16px' }}>Downgrade Role</th>
-                    <th style={{ padding: '12px 16px' }}>Territory / Jurisdiction</th>
-                    <th style={{ padding: '12px 16px' }}>Hierarchy Level</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleDowngradeUsers.map(u => (
-                    <tr key={u.username} style={{ borderBottom: '1px solid #1e295d' }}>
-                      <td style={{ padding: '14px 16px', fontWeight: 700 }}>{u.name}</td>
-                      <td style={{ padding: '14px 16px', color: '#38bdf8' }}><code>{u.username}</code></td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{
-                          background: u.hierarchyLevel === 2 ? '#2563eb' : (u.hierarchyLevel === 3 ? '#0284c7' : '#059669'),
-                          color: '#fff', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700
-                        }}>
-                          {u.role}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#cbd5e1' }}>{u.jurisdiction || u.salon}</td>
-                      <td style={{ padding: '14px 16px', color: '#94a3b8' }}>Level {u.hierarchyLevel}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: BRANCHES & POCS WITH HIERARCHICAL CREATION */}
-        {activeTab === 'branches' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h1 style={{ fontSize: 24, fontWeight: 900 }}>Branch Locations & Designated Site POCs</h1>
-                <p style={{ color: '#94a3b8', fontSize: 13 }}>
-                  Global hierarchy: Country $\to$ State $\to$ Zone $\to$ District with Site Help Desk POCs.
-                </p>
-              </div>
-              {currentUser.type === 'OWNER' && (
-                <button 
-                  onClick={() => setShowAddBranchModal(true)}
-                  style={{ background: '#2563eb', color: '#fff', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer' }}
-                >
-                  <Plus size={16} /> Add Branch (Country/State/Zone)
-                </button>
-              )}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 18, marginTop: 20 }}>
-              {visibleBranches.map(branch => (
-                <div key={branch.id} style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontSize: 17, fontWeight: 800 }}>{branch.branchName}</h3>
-                    <span style={{
-                      background: branch.isActive ? '#065f46' : '#7f1d1d',
-                      color: branch.isActive ? '#34d399' : '#fca5a5',
-                      padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700
-                    }}>
-                      {branch.isActive ? 'Active' : 'DeActive / Hidden'}
-                    </span>
-                  </div>
-
-                  <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>
-                    🌍 {branch.country} &rarr; {branch.state} &rarr; {branch.zone} &rarr; <strong>{branch.district}</strong>
+            {/* Quick Action Alerts */}
+            {currentUser.hierarchyLevel <= 3 && totalPendingApprovals > 0 && (
+              <div style={{ background: '#2e1065', border: '1px solid #a855f7', borderRadius: 12, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 16, color: '#f3e8ff' }}>Action Required: {totalPendingApprovals} Pending Items Awaiting Zonal Review</h4>
+                  <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#d8b4fe' }}>
+                    {pendingSalonsInScope.length} Salons, {pendingBranchesInScope.length} Branches, and {pendingServicesInScope.length} Custom Services need verification.
                   </p>
-                  <p style={{ color: '#cbd5e1', fontSize: 12, marginTop: 2 }}>{branch.addressLine}</p>
-
-                  {/* Help Desk POC Details */}
-                  <div style={{ marginTop: 14, background: '#182559', border: '1px solid #233575', borderRadius: 8, padding: 12 }}>
-                    <span style={{ fontSize: 10, color: '#34d399', fontWeight: 800, textTransform: 'uppercase' }}>Site Help Desk POC</span>
-                    <p style={{ fontSize: 13, fontWeight: 700, marginTop: 2 }}>{branch.pocName} <span style={{ color: '#94a3b8', fontWeight: 400 }}>({branch.pocRole})</span></p>
-                    <div style={{ display: 'flex', gap: 14, marginTop: 6, fontSize: 11, color: '#38bdf8' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={12} /> {branch.pocPhone}</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={12} /> {branch.pocEmail}</span>
-                    </div>
-                  </div>
-
-                  {/* Offered Services Count */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, fontSize: 12 }}>
-                    <span style={{ color: '#cbd5e1' }}>Offered Services: <strong>{branch.offeredServiceIds ? branch.offeredServiceIds.length : 3} Catalog Services</strong></span>
-                    {/* Active/DeActive Toggle for Level 2 & 3 Users */}
-                    {currentUser.hierarchyLevel <= 3 && (
-                      <button 
-                        onClick={() => handleToggleBranchActive(branch.id)}
-                        style={{
-                          background: branch.isActive ? '#7f1d1d' : '#065f46',
-                          color: '#fff', padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer'
-                        }}
-                      >
-                        {branch.isActive ? 'DeActivate Branch' : 'Activate Branch'}
-                      </button>
-                    )}
-                  </div>
                 </div>
-              ))}
-            </div>
+                <button 
+                  onClick={() => setActiveTab('approvals')}
+                  style={{ background: '#a855f7', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+                >
+                  Review Approvals Queue &rarr;
+                </button>
+              </div>
+            )}
           </div>
         )}
 
-        {/* TAB 5: STYLIST ROSTERS, SKILLS & TRANSFER */}
-        {activeTab === 'stylists' && (
+        {/* TAB 2: APPROVALS & REVIEWS QUEUE (MANAGEMENT LEVEL 1-3) */}
+        {activeTab === 'approvals' && currentUser.hierarchyLevel <= 3 && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h1 style={{ fontSize: 24, fontWeight: 900 }}>Stylists, Skill Sets & Branch Assignments</h1>
-                <p style={{ color: '#94a3b8', fontSize: 13 }}>
-                  Owners assign branches and services; Stylists can select/deselect their supported services; Owners can transfer stylists.
-                </p>
-              </div>
-              {currentUser.type === 'OWNER' && (
-                <button 
-                  onClick={() => setShowAddStylistModal(true)}
-                  style={{ background: '#2563eb', color: '#fff', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer' }}
-                >
-                  <Plus size={16} /> Onboard Stylist & Assign Skills
-                </button>
+            <div style={{ marginBottom: 24 }}>
+              <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Management Approvals & Verification Queue</h1>
+              <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+                Review, approve, or reject onboarding applications for Salons, Branches, and Custom Services within <strong>{currentUser.jurisdiction}</strong>.
+              </p>
+            </div>
+
+            {/* SECTION 1: PENDING SALONS */}
+            <div style={{ marginBottom: 32 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Store size={20} color="#38bdf8" /> Pending Salon Registrations ({pendingSalonsInScope.length})
+              </h3>
+              {pendingSalonsInScope.length === 0 ? (
+                <div style={{ background: '#1e293b', padding: 20, borderRadius: 10, color: '#94a3b8', fontSize: 13 }}>
+                  No pending salon applications in your assigned zone.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>
+                  {pendingSalonsInScope.map(sal => (
+                    <div key={sal.id} style={{ background: '#1e293b', border: '1px solid #f59e0b', borderRadius: 12, padding: 22, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <h4 style={{ margin: 0, fontSize: 18, color: '#fff' }}>{sal.brandName}</h4>
+                          <span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800 }}>
+                            PENDING ONBOARDING REVIEW
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>
+                          Owner: <strong>{sal.ownerName}</strong> &bull; Locality: <strong>{sal.locality}</strong> &bull; Type: <strong>{sal.businessType}</strong>
+                        </p>
+                        <p style={{ fontSize: 12, color: '#cbd5e1', marginTop: 2 }}>
+                          Point of Contact (POC): <strong>{sal.pocName}</strong> ({sal.pocPhone}) &bull; Email: {sal.pocEmail}
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <button 
+                          onClick={() => handleApproveSalon(sal.id)}
+                          style={{ background: '#059669', color: '#fff', padding: '10px 18px', borderRadius: 8, fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                        >
+                          <CheckCircle2 size={16} /> Approve Salon
+                        </button>
+                        <button 
+                          onClick={() => handleOpenRejectModal('SALON', sal.id, sal.brandName)}
+                          style={{ background: '#dc2626', color: '#fff', padding: '10px 18px', borderRadius: 8, fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                        >
+                          <XCircle size={16} /> Reject with Reason
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
-              {visibleStylists.map(st => (
-                <div key={st.id} style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <h3 style={{ fontSize: 18, fontWeight: 800 }}>{st.name}</h3>
-                        <span style={{
-                          background: st.isActive ? '#065f46' : '#7f1d1d',
-                          color: st.isActive ? '#34d399' : '#fca5a5',
-                          padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700
-                        }}>
-                          {st.isActive ? 'Active' : 'DeActive / Hidden'}
-                        </span>
-                      </div>
-                      <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 2 }}>
-                        {st.specialization} • Assigned to: <strong style={{ color: '#38bdf8' }}>{st.branch}</strong>
-                      </p>
-                      <p style={{ color: '#cbd5e1', fontSize: 12, marginTop: 4 }}>
-                        Shift: {st.shiftToday}
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      {/* Stylist or Owner can adjust shifts */}
-                      {(currentUser.type === 'OWNER' || currentUser.type === 'STYLIST') && (
-                        <button 
-                          onClick={() => {
-                            setShiftAdjustmentForm({ ...shiftAdjustmentForm, stylistId: st.id });
-                            setShowShiftAdjustmentModal(true);
-                          }}
-                          style={{ background: '#0284c7', color: '#fff', padding: '8px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
-                        >
-                          Shift Adjustment
-                        </button>
-                      )}
-
-                      {/* Owner can transfer stylist between branches */}
-                      {currentUser.type === 'OWNER' && (
-                        <button 
-                          onClick={() => setShowTransferStylistModal(st.id)}
-                          style={{ background: '#7c3aed', color: '#fff', padding: '8px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer' }}
-                        >
-                          <ArrowLeftRight size={14} /> Transfer Branch
-                        </button>
-                      )}
-
-                      {/* Level 2 & 3 Users can Make Active / DeActive */}
-                      {currentUser.hierarchyLevel <= 3 && (
-                        <button 
-                          onClick={() => handleToggleStylistActive(st.id)}
-                          style={{
-                            background: st.isActive ? '#7f1d1d' : '#065f46',
-                            color: '#fff', padding: '8px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer'
-                          }}
-                        >
-                          {st.isActive ? 'DeActivate Stylist' : 'Activate Stylist'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Multi-Select Supported Services (Skills) */}
-                  <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #1e295d' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>
-                        Stylist Supported Services ({st.supportedServiceIds.length} enabled)
-                      </span>
-                      {currentUser.type === 'STYLIST' && currentUser.stylistId === st.id && (
-                        <span style={{ fontSize: 11, color: '#38bdf8' }}>Click any service below to Select / Deselect your skill</span>
-                      )}
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-                      {masterServices.map(svc => {
-                        const isCapable = st.supportedServiceIds.includes(svc.id);
-                        return (
-                          <button
-                            key={svc.id}
-                            disabled={currentUser.type !== 'STYLIST' || currentUser.stylistId !== st.id}
-                            onClick={() => handleToggleStylistService(svc.id)}
-                            style={{
-                              background: isCapable ? '#1e3a8a' : '#1e293b',
-                              color: isCapable ? '#93c5fd' : '#64748b',
-                              border: isCapable ? '1px solid #3b82f6' : '1px solid #334155',
-                              padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-                              cursor: (currentUser.type === 'STYLIST' && currentUser.stylistId === st.id) ? 'pointer' : 'default'
-                            }}
-                          >
-                            {isCapable ? '✓ ' : '+ '} {svc.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+            {/* SECTION 2: PENDING CUSTOM SERVICES & PRICE OVERRIDES */}
+            <div style={{ marginBottom: 32 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Tag size={20} color="#a78bfa" /> Pending Custom Services Proposed by Owners ({pendingServicesInScope.length})
+              </h3>
+              {pendingServicesInScope.length === 0 ? (
+                <div style={{ background: '#1e293b', padding: 20, borderRadius: 10, color: '#94a3b8', fontSize: 13 }}>
+                  No custom service proposals awaiting review.
                 </div>
-              ))}
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>
+                  {pendingServicesInScope.map(svc => (
+                    <div key={svc.id} style={{ background: '#1e293b', border: '1px solid #8b5cf6', borderRadius: 12, padding: 22, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <h4 style={{ margin: 0, fontSize: 18, color: '#fff' }}>{svc.name}</h4>
+                          <span style={{ background: '#ede9fe', color: '#5b21b6', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800 }}>
+                            AWAITING PRICE APPROVAL
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>
+                          Proposed by: <strong>{svc.submittedBy}</strong> &bull; Target Branch: <strong>{svc.targetBranchName}</strong> &bull; Category: <strong>{svc.category}</strong>
+                        </p>
+                        <p style={{ fontSize: 13, color: '#f8fafc', marginTop: 2 }}>
+                          Proposed Custom Price: <strong style={{ color: '#34d399' }}>₹{svc.customPrice}</strong> &bull; Regional Minimum Floor Price: <strong style={{ color: '#f59e0b' }}>₹{svc.minFloorPrice}</strong> &bull; Duration: <strong>{svc.duration} mins</strong>
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <button 
+                          onClick={() => handleApproveService(svc.id)}
+                          style={{ background: '#059669', color: '#fff', padding: '10px 18px', borderRadius: 8, fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                        >
+                          <CheckCircle2 size={16} /> Approve Service
+                        </button>
+                        <button 
+                          onClick={() => handleOpenRejectModal('SERVICE', svc.id, svc.name)}
+                          style={{ background: '#dc2626', color: '#fff', padding: '10px 18px', borderRadius: 8, fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                        >
+                          <XCircle size={16} /> Reject Service
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* SECTION 3: PENDING BRANCHES */}
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Building size={20} color="#34d399" /> Pending Physical / Doorstep Branches ({pendingBranchesInScope.length})
+              </h3>
+              {pendingBranchesInScope.length === 0 ? (
+                <div style={{ background: '#1e293b', padding: 20, borderRadius: 10, color: '#94a3b8', fontSize: 13 }}>
+                  All registered branches in your zone are approved and active.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>
+                  {pendingBranchesInScope.map(br => (
+                    <div key={br.id} style={{ background: '#1e293b', border: '1px solid #10b981', borderRadius: 12, padding: 22, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <h4 style={{ margin: 0, fontSize: 18, color: '#fff' }}>{br.branchName}</h4>
+                          <span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800 }}>
+                            PENDING BRANCH INSPECTION
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>
+                          Salon Brand: <strong>{br.salonName}</strong> &bull; Locality: <strong>{br.locality}</strong> &bull; Address: <strong>{br.addressLine}</strong>
+                        </p>
+                        <p style={{ fontSize: 12, color: '#cbd5e1', marginTop: 2 }}>
+                          Branch POC: <strong>{br.pocName}</strong> ({br.pocPhone}) &bull; Doorstep Enabled: <strong>{br.isDoorstepEnabled ? 'Yes' : 'No'}</strong>
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <button 
+                          onClick={() => handleApproveBranch(br.id)}
+                          style={{ background: '#059669', color: '#fff', padding: '10px 18px', borderRadius: 8, fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer' }}
+                        >
+                          Approve Branch
+                        </button>
+                        <button 
+                          onClick={() => handleOpenRejectModal('BRANCH', br.id, br.branchName)}
+                          style={{ background: '#dc2626', color: '#fff', padding: '10px 18px', borderRadius: 8, fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer' }}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* TAB 6: CATALOG & FLOOR PRICING (SET BY L1, L2, L3) */}
+        {/* TAB 3: SERVICES & PRICING (BOTH ADMINS & SALON OWNERS CAN ADD) */}
         {activeTab === 'pricing' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
-                <h1 style={{ fontSize: 24, fontWeight: 900 }}>Master Services & Minimum Floor Price Authority</h1>
-                <p style={{ color: '#94a3b8', fontSize: 13 }}>
-                  Level 1 (Super Admin), Level 2 (State Admin), and Level 3 (Zonal Manager) can set Minimum Floor Prices and add services.
+                <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Service Catalog & Floor Pricing Authority</h1>
+                <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+                  {currentUser.hierarchyLevel <= 3 
+                    ? 'Management sets baseline minimum floor prices. Owners cannot undercut these thresholds.'
+                    : 'Salon Owners can request new custom services for their branches (subject to Zonal Manager approval).'}
                 </p>
               </div>
-              {currentUser.hierarchyLevel <= 3 && (
-                <button 
-                  onClick={() => setShowAddServiceModal(true)}
-                  style={{ background: '#2563eb', color: '#fff', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer' }}
-                >
-                  <Plus size={16} /> Add Master Service & Floor Price
-                </button>
-              )}
+
+              <button 
+                onClick={() => setShowAddServiceModal(true)}
+                style={{ background: '#7c3aed', color: '#fff', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer' }}
+              >
+                <Plus size={16} /> {currentUser.hierarchyLevel <= 3 ? 'Add Master Service & Floor Price' : '+ Request / Add Custom Service'}
+              </button>
             </div>
 
-            <div style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', marginTop: 20, overflow: 'hidden' }}>
+            <div style={{ background: '#1e293b', borderRadius: 12, border: '1px solid #334155', overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#182559', color: '#94a3b8', borderBottom: '1px solid #233575' }}>
-                    <th style={{ padding: '12px 16px' }}>Service Name</th>
-                    <th style={{ padding: '12px 16px' }}>Category</th>
-                    <th style={{ padding: '12px 16px' }}>Duration</th>
-                    <th style={{ padding: '12px 16px' }}>Base Price</th>
-                    <th style={{ padding: '12px 16px' }}>Minimum Floor Price (Set by L1/L2/L3)</th>
-                    <th style={{ padding: '12px 16px' }}>Status</th>
-                    <th style={{ padding: '12px 16px' }}>Actions</th>
+                  <tr style={{ background: '#0f172a', color: '#94a3b8', borderBottom: '1px solid #334155' }}>
+                    <th style={{ padding: '14px 18px' }}>Service Name</th>
+                    <th style={{ padding: '14px 18px' }}>Category</th>
+                    <th style={{ padding: '14px 18px' }}>Duration</th>
+                    <th style={{ padding: '14px 18px' }}>Market Price</th>
+                    <th style={{ padding: '14px 18px' }}>Minimum Floor Price</th>
+                    <th style={{ padding: '14px 18px' }}>Approval Status</th>
+                    <th style={{ padding: '14px 18px' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {masterServices.map(svc => (
-                    <tr key={svc.id} style={{ borderBottom: '1px solid #1e295d' }}>
-                      <td style={{ padding: '14px 16px', fontWeight: 700 }}>{svc.name}</td>
-                      <td style={{ padding: '14px 16px', color: '#38bdf8' }}>{svc.category}</td>
-                      <td style={{ padding: '14px 16px' }}>{svc.duration} mins</td>
-                      <td style={{ padding: '14px 16px', fontWeight: 800 }}>₹{svc.basePrice}</td>
-                      <td style={{ padding: '14px 16px', color: '#f59e0b', fontWeight: 800 }}>
-                        ₹{svc.minFloorPrice}
+                    <tr key={svc.id} style={{ borderBottom: '1px solid #334155' }}>
+                      <td style={{ padding: '14px 18px', fontWeight: 700 }}>
+                        {svc.name}
+                        {svc.submittedBy && (
+                          <div style={{ fontSize: 11, color: '#38bdf8', fontWeight: 500 }}>
+                            Custom proposed by {svc.submittedBy}
+                          </div>
+                        )}
                       </td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{
-                          background: svc.isActive ? '#065f46' : '#7f1d1d',
-                          color: svc.isActive ? '#34d399' : '#fca5a5',
-                          padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700
-                        }}>
-                          {svc.isActive ? 'Active' : 'DeActive'}
-                        </span>
+                      <td style={{ padding: '14px 18px', color: '#38bdf8' }}>{svc.category}</td>
+                      <td style={{ padding: '14px 18px' }}>{svc.duration} mins</td>
+                      <td style={{ padding: '14px 18px', fontWeight: 800 }}>₹{svc.basePrice}</td>
+                      <td style={{ padding: '14px 18px', color: '#f59e0b', fontWeight: 800 }}>₹{svc.minFloorPrice}</td>
+                      <td style={{ padding: '14px 18px' }}>
+                        {svc.approvalStatus === 'Approved' ? (
+                          <span style={{ background: '#065f46', color: '#a7f3d0', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                            Approved / Live
+                          </span>
+                        ) : svc.approvalStatus === 'Pending_Approval' ? (
+                          <span style={{ background: '#78350f', color: '#fde68a', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                            Pending Zonal Review
+                          </span>
+                        ) : (
+                          <span style={{ background: '#7f1d1d', color: '#fecaca', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                            Rejected
+                          </span>
+                        )}
                       </td>
-                      <td style={{ padding: '14px 16px' }}>
-                        {currentUser.hierarchyLevel <= 3 && (
+                      <td style={{ padding: '14px 18px' }}>
+                        {currentUser.hierarchyLevel <= 3 ? (
                           <button 
                             onClick={() => handleToggleServiceActive(svc.id)}
                             style={{
-                              background: svc.isActive ? '#7f1d1d' : '#065f46',
-                              color: '#fff', padding: '4px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer'
+                              background: svc.isActive ? '#1f2937' : '#059669',
+                              color: svc.isActive ? '#f87171' : '#fff',
+                              padding: '5px 10px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer'
                             }}
                           >
-                            {svc.isActive ? 'DeActivate' : 'Activate'}
+                            {svc.isActive ? 'Deactivate' : 'Activate'}
                           </button>
+                        ) : (
+                          <span style={{ color: '#94a3b8', fontSize: 12 }}>Offered at Branch</span>
                         )}
                       </td>
                     </tr>
@@ -1608,101 +1539,335 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 7: BOOKINGS & CHECK-IN OTP (OWNERS AND STYLISTS ONLY) */}
+        {/* TAB 4: BOOKINGS & CHECK-IN OTP (STRICT SCOPE ENFORCEMENT!) */}
         {activeTab === 'bookings' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
-                <h1 style={{ fontSize: 24, fontWeight: 900 }}>Appointments & 6-Digit OTP Check-In</h1>
-                <p style={{ color: '#94a3b8', fontSize: 13 }}>
-                  Owners and Stylists verify 6-digit OTPs and assign stylists for "Any Stylist" bookings.
+                <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Appointment Bookings & Arrival Verification</h1>
+                <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+                  {currentUser.hierarchyLevel <= 3 ? (
+                    <strong style={{ color: '#818cf8' }}>
+                      Territorial Audit Mode: You are viewing bookings in {currentUser.jurisdiction}. Check-in OTP verification is strictly restricted to Salon Owner & Stylist.
+                    </strong>
+                  ) : (
+                    'Owners and Stylists can Accept/Reject incoming requests and perform 6-digit OTP verification upon customer arrival.'
+                  )}
                 </p>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {visibleBookings.map(b => (
-                <div key={b.id} style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 20 }}>
+                <div key={b.id} style={{ background: '#1e293b', borderRadius: 12, border: '1px solid #334155', padding: 22 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <span style={{ background: '#1e3a8a', color: '#38bdf8', padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>
-                        {b.reference}
-                      </span>
-                      <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 6 }}>{b.service}</h3>
-                      <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-                        Customer: <strong>{b.customer}</strong> ({b.phone}) • Slot: <strong>{b.slot}</strong> ({b.branch})
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ background: '#312e81', color: '#a5b4fc', padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 800 }}>
+                          {b.reference}
+                        </span>
+                        <span style={{
+                          background: b.status === 'Completed' ? '#065f46' : (b.status === 'InProgress' ? '#5b21b6' : (b.status === 'Confirmed' ? '#0369a1' : '#78350f')),
+                          color: '#fff', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700
+                        }}>
+                          {b.status === 'PendingConfirmation' ? '⏳ Waiting for Salon Confirmation' : b.status}
+                        </span>
+                        <span style={{ background: b.paymentMode === 'PAY_AT_SALON_CASH' ? '#14532d' : '#1e3a8a', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>
+                          {b.paymentMode === 'PAY_AT_SALON_CASH' ? 'Pay-at-Salon (Cash)' : 'Online (Escrow)'}
+                        </span>
+                      </div>
+                      <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 8 }}>{b.service}</h3>
+                      <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>
+                        Customer: <strong>{b.customer}</strong> ({b.phone}) &bull; Slot: <strong>{b.slot}</strong> ({b.branch})
                       </p>
                       <p style={{ fontSize: 12, color: b.bookedStylistSpecific ? '#34d399' : '#f59e0b', marginTop: 2, fontWeight: 600 }}>
-                        {b.bookedStylistSpecific 
-                          ? `Specific Stylist Booked: ${b.stylist}` 
-                          : `Customer requested "Any Available Stylist" — ${b.stylist}`}
+                        {b.bookedStylistSpecific ? `Assigned Stylist: ${b.stylist}` : `Customer requested "Any Available Stylist" - ${b.stylist}`}
                       </p>
                     </div>
 
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{
-                        background: b.status === 'Completed' ? '#065f46' : (b.status === 'InProgress' ? '#7c3aed' : '#78350f'),
-                        color: '#fff', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700
-                      }}>
-                        {b.status}
-                      </span>
-                      <p style={{ fontSize: 16, fontWeight: 800, marginTop: 4 }}>₹{b.netAmount}</p>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#38bdf8' }}>₹{b.netAmount}</div>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>Total Payable</span>
                     </div>
                   </div>
 
-                  {/* Owner Allocation Action for "Any Stylist" Bookings */}
-                  {!b.bookedStylistSpecific && b.status === 'PendingConfirmation' && currentUser.type === 'OWNER' && (
-                    <div style={{ marginTop: 14, background: '#182559', padding: 12, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 700 }}>Action Required: Allocate an available stylist for this customer appointment:</span>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        {stylists.filter(s => s.branchId === b.branchId && s.isActive).map(st => (
-                          <button
-                            key={st.id}
-                            onClick={() => handleOwnerAssignStylist(b.id, st.id)}
-                            style={{ background: '#2563eb', color: '#fff', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
-                          >
-                            Assign {st.name}
-                          </button>
-                        ))}
-                      </div>
+                  {/* STAGE 1: CONFIRMATION ACTIONS (FOR PENDING BOOKINGS) */}
+                  {b.status === 'PendingConfirmation' && (
+                    <div style={{ marginTop: 16, background: '#0f172a', padding: 14, borderRadius: 8, border: '1px dashed #f59e0b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 13, color: '#fbbf24', fontWeight: 600 }}>
+                        {currentUser.hierarchyLevel <= 3 
+                          ? '⏳ Awaiting confirmation from salon owner or stylist.'
+                          : 'Action Required: Confirm customer appointment request:'}
+                      </span>
+
+                      {currentUser.hierarchyLevel > 3 ? (
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          {!b.bookedStylistSpecific && (
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              {stylists.filter(s => s.branchId === b.branchId && s.isActive).map(st => (
+                                <button 
+                                  key={st.id}
+                                  onClick={() => handleOwnerAssignStylist(b.id, st.id)}
+                                  style={{ background: '#7c3aed', color: '#fff', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+                                >
+                                  Assign {st.name} & Confirm
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {b.bookedStylistSpecific && (
+                            <>
+                              <button 
+                                onClick={() => handleAcceptBooking(b.id)}
+                                style={{ background: '#059669', color: '#fff', padding: '7px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                              >
+                                <Check size={14} /> Accept & Confirm Booking
+                              </button>
+                              <button 
+                                onClick={() => handleRejectBooking(b.id)}
+                                style={{ background: '#dc2626', color: '#fff', padding: '7px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 11, color: '#a5b4fc', fontWeight: 700 }}>
+                          🔒 Territorial Audit View (Accept/Reject restricted to Owner/Stylist)
+                        </span>
+                      )}
                     </div>
                   )}
 
-                  {/* OTP Verification Keypad (Owner and Stylist action) */}
-                  <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #1e295d', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Smartphone size={18} color="#38bdf8" />
-                      <span style={{ fontSize: 12, color: '#cbd5e1' }}>Arrival Check-in 6-Digit OTP:</span>
-                      {b.status === 'Confirmed' ? (
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <input 
-                            type="text" 
-                            id={`otp-input-${b.id}`}
-                            placeholder="6-digit code"
-                            maxLength={6}
-                            style={{ width: 110, padding: '5px 8px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', textAlign: 'center', fontWeight: 800 }}
-                          />
-                          <button 
-                            onClick={() => {
-                              const val = document.getElementById(`otp-input-${b.id}`).value;
-                              handleVerifyOtp(b.id, val);
-                            }}
-                            style={{ background: '#2563eb', color: '#fff', padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
-                          >
-                            Verify & Start
-                          </button>
-                        </div>
+                  {/* STAGE 2: CHECK-IN OTP VERIFICATION (STRICT SCOPE: OWNER & STYLIST ONLY!) */}
+                  {b.status === 'Confirmed' && (
+                    <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Smartphone size={18} color="#38bdf8" />
+                        <span style={{ fontSize: 13, color: '#cbd5e1' }}>Arrival Check-in 6-Digit OTP:</span>
+
+                        {currentUser.hierarchyLevel <= 3 ? (
+                          // MANAGEMENT VIEW: NO OTP KEYPAD!
+                          <span style={{ background: '#312e81', color: '#c7d2fe', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                            🔒 Restricted: OTP Check-in Verification is strictly restricted to Salon Owner or Assigned Stylist.
+                          </span>
+                        ) : (
+                          // OWNER OR STYLIST VIEW: CAN INPUT OTP!
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <input 
+                              type="text" 
+                              id={`otp-input-${b.id}`}
+                              placeholder="6-digit code"
+                              maxLength={6}
+                              style={{ width: 110, padding: '6px 10px', background: '#0f172a', border: '1px solid #475569', borderRadius: 6, color: '#fff', textAlign: 'center', fontWeight: 800 }}
+                            />
+                            <button 
+                              onClick={() => {
+                                const val = document.getElementById(`otp-input-${b.id}`).value;
+                                handleVerifyOtp(b.id, val);
+                              }}
+                              style={{ background: '#7c3aed', color: '#fff', padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+                            >
+                              Verify & Start
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>Demo Customer OTP: <strong>{b.otp}</strong></span>
+                    </div>
+                  )}
+
+                  {/* STAGE 3: IN PROGRESS / COMPLETION */}
+                  {b.status === 'InProgress' && (
+                    <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#a78bfa', fontSize: 13, fontWeight: 700 }}>
+                        ⏱️ Service In-Progress (Verified via OTP)
+                      </span>
+                      {currentUser.hierarchyLevel > 3 ? (
+                        <button 
+                          onClick={() => handleCompleteService(b.id)}
+                          style={{ background: '#059669', color: '#fff', padding: '8px 18px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+                        >
+                          Mark Completed (Process Ledger)
+                        </button>
                       ) : (
-                        <span style={{ color: '#34d399', fontWeight: 800, fontSize: 12 }}>✓ Verified ({b.otp})</span>
+                        <span style={{ fontSize: 12, color: '#94a3b8' }}>In Progress (Salon performing service)</span>
                       )}
                     </div>
+                  )}
 
-                    {b.status === 'InProgress' && (
+                  {/* STAGE 4: COMPLETED */}
+                  {b.status === 'Completed' && (
+                    <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#34d399', fontSize: 12, fontWeight: 700 }}>
+                        ✓ Appointment Completed & Verified &bull; Financial Ledger Settled
+                      </span>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                        OTP: {b.otp} &bull; Check-in Validated
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: WALLET, BILLING & FINANCIAL ACCOUNTING */}
+        {activeTab === 'wallet' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <div>
+                <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Financial Accounting & Owner Wallets</h1>
+                <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+                  Double-entry escrow ledger, SaaS membership billing, and automated commission collection on cash bookings.
+                </p>
+              </div>
+
+              {currentUser.type === 'OWNER' && (
+                <button 
+                  onClick={() => setShowTopUpWalletModal(true)}
+                  style={{ background: '#059669', color: '#fff', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  <CreditCard size={16} /> Top-Up Security Wallet
+                </button>
+              )}
+            </div>
+
+            {/* Wallet Summary Cards */}
+            {currentUser.type === 'OWNER' && currentOwnerWallet ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+                <div style={{ background: '#1e293b', padding: 22, borderRadius: 12, border: '1px solid #334155' }}>
+                  <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Prepaid Security Wallet</span>
+                  <h3 style={{ fontSize: 32, fontWeight: 900, marginTop: 8, color: currentOwnerWallet.balance >= 0 ? '#34d399' : '#f87171' }}>
+                    ₹{currentOwnerWallet.balance.toFixed(2)}
+                  </h3>
+                  <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                    Negative Limit: ₹{currentOwnerWallet.negativeCreditLimit}
+                  </span>
+                </div>
+
+                <div style={{ background: '#1e293b', padding: 22, borderRadius: 12, border: '1px solid #334155' }}>
+                  <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Active SaaS Membership</span>
+                  <h3 style={{ fontSize: 20, fontWeight: 800, marginTop: 8, color: '#a78bfa' }}>
+                    {currentOwnerWallet.membershipPlan}
+                  </h3>
+                  <span style={{ fontSize: 11, color: '#38bdf8' }}>
+                    Fee: {currentOwnerWallet.membershipFee} &bull; Commission Rate: {currentOwnerWallet.commissionRate}%
+                  </span>
+                </div>
+
+                <div style={{ background: '#1e293b', padding: 22, borderRadius: 12, border: '1px solid #334155' }}>
+                  <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Commission Take-Rate Model</span>
+                  <p style={{ fontSize: 12, color: '#cbd5e1', marginTop: 8, lineHeight: 1.5 }}>
+                    When customers pay cash, StyleBook automatically deducts <strong>{currentOwnerWallet.commissionRate}% commission + 18% GST</strong> from your prepaid wallet upon OTP check-in.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              // MANAGEMENT OVERVIEW OF ALL SALON WALLETS
+              <div style={{ background: '#1e293b', borderRadius: 12, border: '1px solid #334155', padding: 20, marginBottom: 28 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px 0' }}>Salon Wallets Overview in {currentUser.jurisdiction}</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+                  {Object.entries(wallets).map(([salId, w]) => (
+                    <div key={salId} style={{ background: '#0f172a', padding: 16, borderRadius: 8, border: '1px solid #334155' }}>
+                      <div style={{ fontWeight: 800, fontSize: 14 }}>{w.salonName}</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Plan: {w.membershipPlan}</div>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: '#34d399', marginTop: 6 }}>Wallet: ₹{w.balance.toFixed(2)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Financial Ledger History */}
+            <div style={{ background: '#1e293b', borderRadius: 12, border: '1px solid #334155', overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #334155', fontWeight: 800, fontSize: 15 }}>
+                Double-Entry Ledger Transactions
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: '#0f172a', color: '#94a3b8', borderBottom: '1px solid #334155' }}>
+                    <th style={{ padding: '12px 18px' }}>Date</th>
+                    <th style={{ padding: '12px 18px' }}>Transaction Type</th>
+                    <th style={{ padding: '12px 18px' }}>Description</th>
+                    <th style={{ padding: '12px 18px', textAlign: 'right' }}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {walletLedger.map(tx => (
+                    <tr key={tx.id} style={{ borderBottom: '1px solid #334155' }}>
+                      <td style={{ padding: '12px 18px', color: '#94a3b8' }}>{tx.date}</td>
+                      <td style={{ padding: '12px 18px' }}>
+                        <span style={{
+                          background: tx.amount < 0 ? '#7f1d1d' : '#065f46',
+                          color: tx.amount < 0 ? '#fecaca' : '#a7f3d0',
+                          padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700
+                        }}>
+                          {tx.type}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 18px' }}>{tx.desc}</td>
+                      <td style={{ padding: '12px 18px', textAlign: 'right', fontWeight: 800, color: tx.amount < 0 ? '#f87171' : '#34d399' }}>
+                        {tx.amount > 0 ? `+₹${tx.amount.toFixed(2)}` : `-₹${Math.abs(tx.amount).toFixed(2)}`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: BRANCHES & POCS */}
+        {activeTab === 'branches' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div>
+                <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Salon Branches & Site POCs</h1>
+                <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+                  Multi-branch footprint across districts with Doorstep support toggles.
+                </p>
+              </div>
+
+              {currentUser.type !== 'STYLIST' && (
+                <button 
+                  onClick={() => setShowAddBranchModal(true)}
+                  style={{ background: '#7c3aed', color: '#fff', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Plus size={16} /> Add New Branch
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+              {visibleBranches.map(br => (
+                <div key={br.id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 22 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ margin: 0, fontSize: 18, color: '#fff' }}>{br.branchName}</h3>
+                    <span style={{ background: br.status === 'Approved' ? '#065f46' : '#78350f', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>
+                      {br.status}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 6 }}>
+                    Locality: <strong>{br.locality}</strong> &bull; Address: {br.addressLine}
+                  </p>
+                  <p style={{ fontSize: 12, color: '#cbd5e1', marginTop: 4 }}>
+                    Site POC: <strong>{br.pocName}</strong> ({br.pocRole}) &bull; Phone: {br.phoneContact}
+                  </p>
+                  <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #334155', paddingTop: 12 }}>
+                    <span style={{ fontSize: 12, color: br.isDoorstepEnabled ? '#34d399' : '#94a3b8', fontWeight: 600 }}>
+                      {br.isDoorstepEnabled ? '✓ Doorstep Home Visits Enabled' : 'In-Salon Only'}
+                    </span>
+                    {currentUser.hierarchyLevel <= 3 && (
                       <button 
-                        onClick={() => handleCompleteService(b.id)}
-                        style={{ background: '#059669', color: '#fff', padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+                        onClick={() => handleToggleBranchActive(br.id)}
+                        style={{ background: '#374151', color: '#cbd5e1', padding: '4px 10px', borderRadius: 6, fontSize: 11, border: 'none', cursor: 'pointer' }}
                       >
-                        Mark Completed
+                        {br.isActive ? 'Deactivate' : 'Activate'}
                       </button>
                     )}
                   </div>
@@ -1712,65 +1877,47 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 8: GOVERNANCE, COMPLIANCE & NOTICES */}
-        {activeTab === 'governance' && (
+        {/* TAB 7: STYLISTS & ROSTERS */}
+        {activeTab === 'stylists' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
-                <h1 style={{ fontSize: 24, fontWeight: 900 }}>Governance, Compliance & Targeted Notices</h1>
-                <p style={{ color: '#94a3b8', fontSize: 13 }}>
-                  Notices can target individual <strong>Stylists</strong>, <strong>Owners</strong>, <strong>Branches</strong>, or <strong>Customers</strong>.
+                <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Stylist Rosters, Skills & Shift Timings</h1>
+                <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+                  Manage certified service capabilities, shift hours, and branch transfers.
                 </p>
               </div>
-              {currentUser.type === 'MANAGEMENT' && (
+
+              {currentUser.type === 'OWNER' && (
                 <button 
-                  onClick={() => setShowIssueNoticeModal(true)}
-                  style={{ background: '#ef4444', color: '#fff', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, border: 'none', cursor: 'pointer' }}
+                  onClick={() => setShowAddStylistModal(true)}
+                  style={{ background: '#7c3aed', color: '#fff', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
                 >
-                  <AlertTriangle size={16} /> Issue Targeted Notice
+                  <Plus size={16} /> Onboard Stylist
                 </button>
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
-              {relevantNotices.map(notice => (
-                <div key={notice.id} style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+              {visibleStylists.map(st => (
+                <div key={st.id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 22 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{
-                        background: '#ef4444', color: '#fff', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800
-                      }}>
-                        TARGET: {notice.targetType}
-                      </span>
-                      <h3 style={{ fontSize: 17, fontWeight: 800 }}>{notice.subject}</h3>
-                    </div>
-                    <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>
-                      ⏳ Grace Period: {notice.gracePeriodHours} Hours
+                    <h3 style={{ margin: 0, fontSize: 18, color: '#fff' }}>{st.name}</h3>
+                    <span style={{ background: '#312e81', color: '#a5b4fc', padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>
+                      ★ {st.rating} ({st.totalReviews} reviews)
                     </span>
                   </div>
-
-                  <p style={{ color: '#cbd5e1', fontSize: 13, marginTop: 8 }}>{notice.description}</p>
+                  <p style={{ fontSize: 13, color: '#38bdf8', marginTop: 4 }}>{st.specialization}</p>
+                  <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Branch Station: <strong>{st.branch}</strong></p>
+                  <p style={{ fontSize: 12, color: '#cbd5e1', marginTop: 4 }}>Shift: <strong>{st.shiftToday}</strong></p>
                   
-                  <div style={{ display: 'flex', gap: 16, marginTop: 12, fontSize: 12, color: '#94a3b8' }}>
-                    <span>Target Entity: <strong style={{ color: '#38bdf8' }}>{notice.targetName}</strong></span>
-                    <span>Issued By: <strong style={{ color: '#fff' }}>{notice.issuedBy}</strong></span>
-                    <span>Date: <strong>{notice.issuedDate}</strong></span>
-                  </div>
-
-                  {notice.ownerReply && (
-                    <div style={{ marginTop: 14, background: '#182559', border: '1px solid #233575', borderRadius: 8, padding: 12 }}>
-                      <p style={{ fontSize: 11, color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase' }}>Official Response Submitted:</p>
-                      <p style={{ fontSize: 13, color: '#f8fafc', marginTop: 4 }}>"{notice.ownerReply}"</p>
-                    </div>
-                  )}
-
-                  {currentUser.type === 'OWNER' && notice.status === 'NOTICE_ISSUED' && (
-                    <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end' }}>
+                  {currentUser.type === 'OWNER' && (
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #334155', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                       <button 
-                        onClick={() => setShowOwnerReplyModal(notice.id)}
-                        style={{ background: '#2563eb', color: '#fff', padding: '8px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+                        onClick={() => setShowTransferStylistModal(st.id)}
+                        style={{ background: '#374151', color: '#cbd5e1', padding: '6px 12px', borderRadius: 6, fontSize: 11, border: 'none', cursor: 'pointer' }}
                       >
-                        Submit Response / Action Plan
+                        Transfer Branch &rarr;
                       </button>
                     </div>
                   )}
@@ -1780,90 +1927,76 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 9: VERIFIED CUSTOMER REVIEWS (BRANCH + STYLIST) */}
-        {activeTab === 'reviews' && (
+        {/* TAB 8: GOVERNANCE & NOTICES */}
+        {activeTab === 'governance' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
-                <h1 style={{ fontSize: 24, fontWeight: 900 }}>Customer Reviews & Rating Audits</h1>
-                <p style={{ color: '#94a3b8', fontSize: 13 }}>
-                  Verified completed bookings with separate star ratings and comments for Branches and Stylists.
+                <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Governance, Compliance & Targeted Notices</h1>
+                <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+                  Issue territorial compliance notices to Stylists, Owners, Branches, or Customers.
                 </p>
               </div>
+
+              {currentUser.hierarchyLevel <= 3 && (
+                <button 
+                  onClick={() => setShowIssueNoticeModal(true)}
+                  style={{ background: '#dc2626', color: '#fff', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  <ShieldAlert size={16} /> Issue Compliance Notice
+                </button>
+              )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
-              {reviews.map(r => (
-                <div key={r.id} style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {relevantNotices.map(n => (
+                <div key={n.id} style={{ background: '#1e293b', border: '1px solid #ef4444', borderRadius: 12, padding: 22 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ background: '#1e3a8a', color: '#38bdf8', padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>
-                        {r.bookingReference}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ background: '#7f1d1d', color: '#fecaca', padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 800 }}>
+                        {n.targetType}: {n.targetName}
                       </span>
-                      <strong style={{ fontSize: 15 }}>{r.customerName}</strong>
+                      <h4 style={{ margin: 0, fontSize: 16, color: '#fff' }}>{n.subject}</h4>
                     </div>
-                    <span style={{ color: '#94a3b8', fontSize: 12 }}>{r.createdAt}</span>
+                    <span style={{ color: '#f87171', fontSize: 12, fontWeight: 700 }}>Grace Period: {n.gracePeriodHours} Hours</span>
                   </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginTop: 14 }}>
-                    <div style={{ background: '#182559', padding: 14, borderRadius: 8 }}>
-                      <span style={{ fontSize: 10, color: '#a78bfa', fontWeight: 800, textTransform: 'uppercase' }}>1. Salon Branch Rating</span>
-                      <h4 style={{ fontSize: 14, fontWeight: 700, marginTop: 2 }}>{r.branchName}</h4>
-                      <div style={{ color: '#f59e0b', fontSize: 14, marginTop: 4 }}>{'★'.repeat(r.branchRating)} ({r.branchRating}/5)</div>
-                      <p style={{ fontSize: 12, color: '#cbd5e1', marginTop: 4 }}>"{r.branchComment}"</p>
-                    </div>
-
-                    <div style={{ background: '#182559', padding: 14, borderRadius: 8 }}>
-                      <span style={{ fontSize: 10, color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase' }}>2. Stylist Rating</span>
-                      <h4 style={{ fontSize: 14, fontWeight: 700, marginTop: 2 }}>{r.stylistName}</h4>
-                      <div style={{ color: '#f59e0b', fontSize: 14, marginTop: 4 }}>{'★'.repeat(r.stylistRating)} ({r.stylistRating}/5)</div>
-                      <p style={{ fontSize: 12, color: '#cbd5e1', marginTop: 4 }}>"{r.stylistComment}"</p>
-                    </div>
-                  </div>
+                  <p style={{ fontSize: 13, color: '#cbd5e1', marginTop: 8 }}>{n.description}</p>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* TAB 10: HELP DESK / POC CONTACT DIRECTORY */}
+        {/* TAB 9: HELP DESK & POCS */}
         {activeTab === 'helpdesk' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h1 style={{ fontSize: 24, fontWeight: 900 }}>Help Desk & Point of Contact (POC) Directory</h1>
-                <p style={{ color: '#94a3b8', fontSize: 13 }}>
-                  Direct contact lines for Manager, Admin, and Finance desks.
-                </p>
-              </div>
+            <div style={{ marginBottom: 20 }}>
+              <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Help Desk & Point of Contact (POC) Directory</h1>
+              <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+                Direct operational and escalation contact details for platform managers, admins, and branch heads.
+              </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18, marginTop: 20 }}>
-              <div style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 20 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#38bdf8' }}>Regional Operations Desk</h3>
-                <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Zonal Manager: Murugan (Zone 1)</p>
-                <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Phone size={14} color="#10b981" /> +91 94431 88990</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Mail size={14} color="#38bdf8" /> zonal.ramnad@stylebook.in</span>
-                </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 22 }}>
+                <h4 style={{ margin: 0, fontSize: 16, color: '#38bdf8' }}>Zonal Operations Manager (POC)</h4>
+                <p style={{ fontSize: 13, color: '#cbd5e1', marginTop: 6 }}>Murugan (Zonal Officer)</p>
+                <p style={{ fontSize: 12, color: '#94a3b8' }}>Phone: +91 98421 00002</p>
+                <p style={{ fontSize: 12, color: '#94a3b8' }}>Scope: Zone 1 - Ramanathapuram</p>
               </div>
 
-              <div style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 20 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#a78bfa' }}>State Administrator Desk</h3>
-                <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>State Admin: Selvakumar (Tamil Nadu)</p>
-                <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Phone size={14} color="#10b981" /> +91 94431 00009</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Mail size={14} color="#a78bfa" /> admin.tn@stylebook.in</span>
-                </div>
+              <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 22 }}>
+                <h4 style={{ margin: 0, fontSize: 16, color: '#a78bfa' }}>Regional State Admin (POC)</h4>
+                <p style={{ fontSize: 13, color: '#cbd5e1', marginTop: 6 }}>Selvakumar (State Admin)</p>
+                <p style={{ fontSize: 12, color: '#94a3b8' }}>Phone: +91 98421 00001</p>
+                <p style={{ fontSize: 12, color: '#94a3b8' }}>Scope: Tamil Nadu State</p>
               </div>
 
-              <div style={{ background: '#111c44', borderRadius: 12, border: '1px solid #1e295d', padding: 20 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#f59e0b' }}>Platform Finance & Billing</h3>
-                <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Payouts, Commissions, Invoices</p>
-                <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Phone size={14} color="#10b981" /> +91 94431 88995</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Mail size={14} color="#f59e0b" /> finance@stylebook.in</span>
-                </div>
+              <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 22 }}>
+                <h4 style={{ margin: 0, fontSize: 16, color: '#34d399' }}>Accounts & Billing Desk (POC)</h4>
+                <p style={{ fontSize: 13, color: '#cbd5e1', marginTop: 6 }}>Finance & Settlement Desk</p>
+                <p style={{ fontSize: 12, color: '#94a3b8' }}>Phone: +91 98421 00015</p>
+                <p style={{ fontSize: 12, color: '#94a3b8' }}>Email: finance@stylebook.in</p>
               </div>
             </div>
           </div>
@@ -1871,166 +2004,53 @@ export default function App() {
 
       </div>
 
-      {/* MODAL: CREATE BRANCH (WITH COUNTRY -> STATE -> ZONE -> DISTRICT) */}
-      {showAddBranchModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
-          <div style={{ background: '#111c44', border: '1px solid #1e295d', borderRadius: 14, width: '100%', maxWidth: 540, maxHeight: '90vh', overflowY: 'auto', padding: 28 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Create Branch (Global Multi-Region Scaling)</h3>
-            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Specify Country, State, Zone, District, and Site POC.</p>
-
-            <form onSubmit={handleCreateBranch} style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input 
-                type="text" 
-                placeholder="Branch Name (e.g. Royal Classic - Kenikarai)"
-                value={newBranchForm.branchName}
-                onChange={(e) => setNewBranchForm({ ...newBranchForm, branchName: e.target.value })}
-                style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
-              />
-
-              {/* Country -> State -> Zone -> District Selectors */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>Country</label>
-                  <select 
-                    value={newBranchForm.countryId}
-                    onChange={(e) => setNewBranchForm({ ...newBranchForm, countryId: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', marginTop: 4, fontSize: 12 }}
-                  >
-                    {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>State</label>
-                  <select 
-                    value={newBranchForm.stateId}
-                    onChange={(e) => setNewBranchForm({ ...newBranchForm, stateId: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', marginTop: 4, fontSize: 12 }}
-                  >
-                    {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>Zone</label>
-                  <select 
-                    value={newBranchForm.zoneId}
-                    onChange={(e) => setNewBranchForm({ ...newBranchForm, zoneId: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', marginTop: 4, fontSize: 12 }}
-                  >
-                    {zones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>District / Town</label>
-                  <select 
-                    value={newBranchForm.districtId}
-                    onChange={(e) => setNewBranchForm({ ...newBranchForm, districtId: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', marginTop: 4, fontSize: 12 }}
-                  >
-                    {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* Site POC Person */}
-              <div style={{ background: '#182559', padding: 12, borderRadius: 8, border: '1px solid #233575' }}>
-                <span style={{ fontSize: 11, color: '#34d399', fontWeight: 800, textTransform: 'uppercase' }}>Site Help Desk POC Person</span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 8 }}>
-                  <input 
-                    type="text" placeholder="POC Name"
-                    value={newBranchForm.pocName}
-                    onChange={(e) => setNewBranchForm({ ...newBranchForm, pocName: e.target.value })}
-                    style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-                  />
-                  <input 
-                    type="text" placeholder="POC Phone (+91 ...)"
-                    value={newBranchForm.pocPhone}
-                    onChange={(e) => setNewBranchForm({ ...newBranchForm, pocPhone: e.target.value })}
-                    style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }}>
-                <button type="button" onClick={() => setShowAddBranchModal(false)} style={{ background: '#1f2937', color: '#cbd5e1', padding: '9px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ background: '#2563eb', color: '#fff', padding: '9px 18px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Create Branch</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: ONBOARD STYLIST & MULTI-SELECT SKILLS */}
-      {showAddStylistModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
-          <div style={{ background: '#111c44', border: '1px solid #1e295d', borderRadius: 14, width: '100%', maxWidth: 500, padding: 28 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Onboard Stylist & Assign Skills</h3>
-            <form onSubmit={handleAddStylist} style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input 
-                type="text" placeholder="Stylist Full Name"
-                value={newStylistForm.name}
-                onChange={(e) => setNewStylistForm({ ...newStylistForm, name: e.target.value })}
-                style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
-              />
-              <select 
-                value={newStylistForm.branchId}
-                onChange={(e) => setNewStylistForm({ ...newStylistForm, branchId: e.target.value })}
-                style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
-              >
-                {branches.map(b => <option key={b.id} value={b.id}>{b.branchName} ({b.locality})</option>)}
-              </select>
-
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Select Services Stylist Can Perform</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginTop: 6 }}>
-                  {masterServices.map(svc => (
-                    <label key={svc.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#cbd5e1' }}>
-                      <input 
-                        type="checkbox"
-                        checked={newStylistForm.selectedServices.includes(svc.id)}
-                        onChange={(e) => {
-                          const updated = e.target.checked 
-                            ? [...newStylistForm.selectedServices, svc.id]
-                            : newStylistForm.selectedServices.filter(id => id !== svc.id);
-                          setNewStylistForm({ ...newStylistForm, selectedServices: updated });
-                        }}
-                      />
-                      {svc.name}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }}>
-                <button type="button" onClick={() => setShowAddStylistModal(false)} style={{ background: '#1f2937', color: '#cbd5e1', padding: '9px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ background: '#2563eb', color: '#fff', padding: '9px 18px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Save Stylist</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: ADD MASTER SERVICE & FLOOR PRICE (L1, L2, L3 AUTHORITY) */}
+      {/* MODAL: ADD / REQUEST CUSTOM SERVICE (FOR OWNERS & ADMINS) */}
       {showAddServiceModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
-          <div style={{ background: '#111c44', border: '1px solid #1e295d', borderRadius: 14, width: '100%', maxWidth: 480, padding: 28 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Add Master Service & Minimum Floor Price</h3>
-            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Only Level 1, 2, and 3 users can configure minimum floor prices.</p>
+          <div style={{ background: '#1e293b', border: '1px solid #475569', borderRadius: 14, width: '100%', maxWidth: 480, padding: 28 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>
+              {currentUser.hierarchyLevel <= 3 ? 'Add Master Service & Set Floor Price' : 'Request / Add Custom Service for Your Salon'}
+            </h3>
+            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+              {currentUser.hierarchyLevel <= 3 
+                ? 'Adds to global master catalog with immediate effect.'
+                : 'Custom services require Zonal Manager approval before appearing on the customer marketplace.'}
+            </p>
 
-            <form onSubmit={handleAddMasterService} style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <form onSubmit={handleCreateService} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <input 
-                type="text" placeholder="Service Name"
+                type="text" placeholder="Service Name (e.g. Keratin Hair Treatment)"
                 value={newServiceForm.name}
                 onChange={(e) => setNewServiceForm({ ...newServiceForm, name: e.target.value })}
                 style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
               />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                <select 
+                  value={newServiceForm.category}
+                  onChange={(e) => setNewServiceForm({ ...newServiceForm, category: e.target.value })}
+                  style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
+                >
+                  <option value="Hair Care">Hair Care</option>
+                  <option value="Shave & Beard">Shave & Beard</option>
+                  <option value="Facial & Glow">Facial & Glow</option>
+                  <option value="Bridal">Bridal</option>
+                  <option value="Head Massage">Head Massage</option>
+                </select>
+
+                <input 
+                  type="number" placeholder="Duration (mins)"
+                  value={newServiceForm.duration}
+                  onChange={(e) => setNewServiceForm({ ...newServiceForm, duration: e.target.value })}
+                  style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
+                />
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                 <input 
-                  type="number" placeholder="Base Market Price (₹)"
-                  value={newServiceForm.basePrice}
-                  onChange={(e) => setNewServiceForm({ ...newServiceForm, basePrice: e.target.value })}
+                  type="number" placeholder="Proposed Custom Price (₹)"
+                  value={newServiceForm.customPrice}
+                  onChange={(e) => setNewServiceForm({ ...newServiceForm, customPrice: e.target.value, basePrice: e.target.value })}
                   style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
                 />
                 <input 
@@ -2042,27 +2062,146 @@ export default function App() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }}>
-                <button type="button" onClick={() => setShowAddServiceModal(false)} style={{ background: '#1f2937', color: '#cbd5e1', padding: '9px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ background: '#0284c7', color: '#fff', padding: '9px 18px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Save to Catalog</button>
+                <button type="button" onClick={() => setShowAddServiceModal(false)} style={{ background: '#374151', color: '#cbd5e1', padding: '9px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" style={{ background: '#7c3aed', color: '#fff', padding: '9px 18px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+                  {currentUser.hierarchyLevel <= 3 ? 'Save Master Service' : 'Submit for Zonal Review'}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* MODAL: TRANSFER STYLIST (OWNER ACTION) */}
+      {/* MODAL: TOP UP WALLET */}
+      {showTopUpWalletModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
+          <div style={{ background: '#1e293b', border: '1px solid #475569', borderRadius: 14, width: '100%', maxWidth: 420, padding: 28 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Top-Up Prepaid Security Wallet</h3>
+            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+              Maintains your balance to accept Pay-at-Salon cash appointments.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18 }}>
+              <button 
+                onClick={() => handleTopUpWallet(1000)}
+                style={{ padding: '12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#34d399', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}
+              >
+                + ₹1,000 (Quick Top-Up via UPI)
+              </button>
+              <button 
+                onClick={() => handleTopUpWallet(2500)}
+                style={{ padding: '12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#34d399', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}
+              >
+                + ₹2,500 (Recommended Monthly Buffer)
+              </button>
+              <button 
+                onClick={() => handleTopUpWallet(5000)}
+                style={{ padding: '12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#34d399', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}
+              >
+                + ₹5,000 (High Volume Multi-Branch)
+              </button>
+            </div>
+
+            <div style={{ marginTop: 18, textAlign: 'right' }}>
+              <button onClick={() => setShowTopUpWalletModal(false)} style={{ background: '#374151', color: '#cbd5e1', padding: '8px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: REJECTION REASON */}
+      {rejectionModalData && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
+          <div style={{ background: '#1e293b', border: '1px solid #dc2626', borderRadius: 14, width: '100%', maxWidth: 440, padding: 28 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#f87171' }}>
+              Reject {rejectionModalData.type}: {rejectionModalData.name}
+            </h3>
+            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+              Provide clear feedback so the applicant can submit corrective details:
+            </p>
+
+            <textarea 
+              rows={4}
+              placeholder="e.g. Sanitation license missing, or proposed price is below the regional minimum floor price of ₹950."
+              value={rejectionReasonInput}
+              onChange={(e) => setRejectionReasonInput(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px', background: '#0f172a', border: '1px solid #475569', borderRadius: 8, color: '#fff', fontSize: 13, marginTop: 14, boxSizing: 'border-box' }}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 14 }}>
+              <button onClick={() => setRejectionModalData(null)} style={{ background: '#374151', color: '#cbd5e1', padding: '8px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleConfirmRejection} style={{ background: '#dc2626', color: '#fff', padding: '8px 18px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Confirm Rejection</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ADD BRANCH */}
+      {showAddBranchModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
+          <div style={{ background: '#1e293b', border: '1px solid #475569', borderRadius: 14, width: '100%', maxWidth: 480, padding: 28 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Create New Branch Profile</h3>
+            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Branches created by owners enter Pending review before going live.</p>
+
+            <form onSubmit={handleCreateBranch} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <input 
+                type="text" placeholder="Branch Name (e.g. Royal Classic - Puduvalasai)"
+                value={newBranchForm.branchName}
+                onChange={(e) => setNewBranchForm({ ...newBranchForm, branchName: e.target.value })}
+                style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
+              />
+              <input 
+                type="text" placeholder="Address Line"
+                value={newBranchForm.addressLine}
+                onChange={(e) => setNewBranchForm({ ...newBranchForm, addressLine: e.target.value })}
+                style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                <input 
+                  type="text" placeholder="Site POC Name"
+                  value={newBranchForm.pocName}
+                  onChange={(e) => setNewBranchForm({ ...newBranchForm, pocName: e.target.value })}
+                  style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
+                />
+                <input 
+                  type="text" placeholder="Site POC Phone"
+                  value={newBranchForm.pocPhone}
+                  onChange={(e) => setNewBranchForm({ ...newBranchForm, pocPhone: e.target.value })}
+                  style={{ padding: '9px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 13 }}
+                />
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#cbd5e1', cursor: 'pointer', marginTop: 4 }}>
+                <input 
+                  type="checkbox" 
+                  checked={newBranchForm.isDoorstepEnabled}
+                  onChange={(e) => setNewBranchForm({ ...newBranchForm, isDoorstepEnabled: e.target.checked })}
+                />
+                Enable Doorstep Mobile Service for this Branch
+              </label>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }}>
+                <button type="button" onClick={() => setShowAddBranchModal(false)} style={{ background: '#374151', color: '#cbd5e1', padding: '9px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" style={{ background: '#7c3aed', color: '#fff', padding: '9px 18px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Save Branch</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: TRANSFER STYLIST */}
       {showTransferStylistModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
-          <div style={{ background: '#111c44', border: '1px solid #1e295d', borderRadius: 14, width: '100%', maxWidth: 440, padding: 28 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Transfer Stylist to Another Branch</h3>
-            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Select the target branch for re-assignment:</p>
+          <div style={{ background: '#1e293b', border: '1px solid #475569', borderRadius: 14, width: '100%', maxWidth: 420, padding: 28 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Transfer Stylist to Branch</h3>
+            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Select target branch for reassignment:</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
               {branches.map(b => (
                 <button
                   key={b.id}
                   onClick={() => handleTransferStylist(showTransferStylistModal, b.id)}
-                  style={{ background: '#182559', border: '1px solid #233575', color: '#cbd5e1', padding: '10px 14px', borderRadius: 8, textAlign: 'left', fontWeight: 600, cursor: 'pointer' }}
+                  style={{ background: '#0f172a', border: '1px solid #334155', color: '#cbd5e1', padding: '10px 14px', borderRadius: 8, textAlign: 'left', fontWeight: 600, cursor: 'pointer' }}
                 >
                   📍 {b.branchName} ({b.locality})
                 </button>
@@ -2070,244 +2209,8 @@ export default function App() {
             </div>
 
             <div style={{ marginTop: 16, textAlign: 'right' }}>
-              <button onClick={() => setShowTransferStylistModal(null)} style={{ background: '#1f2937', color: '#cbd5e1', padding: '8px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Close</button>
+              <button onClick={() => setShowTransferStylistModal(null)} style={{ background: '#374151', color: '#cbd5e1', padding: '8px 16px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Close</button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: SHIFT ADJUSTMENT */}
-      {showShiftAdjustmentModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
-          <div style={{ background: '#111c44', border: '1px solid #1e295d', borderRadius: 14, width: '100%', maxWidth: 440, padding: 28 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Stylist Shift Timing Adjustment</h3>
-            <form onSubmit={handleSaveShiftAdjustment} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                <input 
-                  type="text" placeholder="Shift Start"
-                  value={shiftAdjustmentForm.newStartTime}
-                  onChange={(e) => setShiftAdjustmentForm({ ...shiftAdjustmentForm, newStartTime: e.target.value })}
-                  style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-                />
-                <input 
-                  type="text" placeholder="Shift End"
-                  value={shiftAdjustmentForm.newEndTime}
-                  onChange={(e) => setShiftAdjustmentForm({ ...shiftAdjustmentForm, newEndTime: e.target.value })}
-                  style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                <input 
-                  type="text" placeholder="Lunch Start"
-                  value={shiftAdjustmentForm.newLunchStart}
-                  onChange={(e) => setShiftAdjustmentForm({ ...shiftAdjustmentForm, newLunchStart: e.target.value })}
-                  style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-                />
-                <input 
-                  type="text" placeholder="Lunch End"
-                  value={shiftAdjustmentForm.newLunchEnd}
-                  onChange={(e) => setShiftAdjustmentForm({ ...shiftAdjustmentForm, newLunchEnd: e.target.value })}
-                  style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }}>
-                <button type="button" onClick={() => setShowShiftAdjustmentModal(false)} style={{ background: '#1f2937', color: '#cbd5e1', padding: '8px 14px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ background: '#2563eb', color: '#fff', padding: '8px 16px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Save Adjustment</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: ISSUE TARGETED NOTICE */}
-      {showIssueNoticeModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
-          <div style={{ background: '#111c44', border: '1px solid #1e295d', borderRadius: 14, width: '100%', maxWidth: 500, padding: 28 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Issue Notice to Stylist, Owner, Branch, or Customer</h3>
-            <form onSubmit={handleIssueNotice} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>Target Entity Type</label>
-                <select 
-                  value={newNoticeForm.targetType}
-                  onChange={(e) => setNewNoticeForm({ ...newNoticeForm, targetType: e.target.value })}
-                  style={{ width: '100%', padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', marginTop: 4, fontSize: 12 }}
-                >
-                  <option value="BRANCH">Specific Branch</option>
-                  <option value="STYLIST">Individual Stylist</option>
-                  <option value="OWNER">Salon Owner</option>
-                  <option value="CUSTOMER">Customer</option>
-                </select>
-              </div>
-
-              <input 
-                type="text" placeholder="Target Name (e.g. Karthik Raja or Puduvalasai Branch)"
-                value={newNoticeForm.targetName}
-                onChange={(e) => setNewNoticeForm({ ...newNoticeForm, targetName: e.target.value })}
-                style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-              />
-
-              <input 
-                type="text" placeholder="Notice Subject"
-                value={newNoticeForm.subject}
-                onChange={(e) => setNewNoticeForm({ ...newNoticeForm, subject: e.target.value })}
-                style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-              />
-
-              <textarea 
-                rows={3} placeholder="Notice Description & Required Remedy..."
-                value={newNoticeForm.description}
-                onChange={(e) => setNewNoticeForm({ ...newNoticeForm, description: e.target.value })}
-                style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-              />
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                <button type="button" onClick={() => setShowIssueNoticeModal(false)} style={{ background: '#1f2937', color: '#cbd5e1', padding: '8px 14px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ background: '#ef4444', color: '#fff', padding: '8px 16px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Dispatch Notice</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: SUBMIT EXPLANATION (OWNER) */}
-      {showOwnerReplyModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
-          <div style={{ background: '#111c44', border: '1px solid #1e295d', borderRadius: 14, width: '100%', maxWidth: 480, padding: 28 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Submit Official Explanation</h3>
-            <textarea 
-              rows={4}
-              placeholder="State your resolution or corrective steps taken..."
-              value={ownerReplyText}
-              onChange={(e) => setOwnerReplyText(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', marginTop: 12, fontSize: 13 }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 14 }}>
-              <button onClick={() => setShowOwnerReplyModal(null)} style={{ background: '#1f2937', color: '#cbd5e1', padding: '8px 14px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => handleSubmitOwnerReply(showOwnerReplyModal)} style={{ background: '#2563eb', color: '#fff', padding: '8px 16px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Submit</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: CREATE GEOGRAPHY */}
-      {showCreateGeoModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
-          <div style={{ background: '#111c44', border: '1px solid #1e295d', borderRadius: 14, width: '100%', maxWidth: 460, padding: 28 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Add Geography Unit</h3>
-            <form onSubmit={handleCreateGeography} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <select 
-                value={newGeoForm.type}
-                onChange={(e) => setNewGeoForm({ ...newGeoForm, type: e.target.value })}
-                style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-              >
-                {currentUser.hierarchyLevel === 1 && <option value="COUNTRY">Country (Super Admin Only)</option>}
-                <option value="STATE">State (Country Level Admin)</option>
-                <option value="ZONE">Zone</option>
-                <option value="DISTRICT">District / Town</option>
-              </select>
-
-              {newGeoForm.type === 'COUNTRY' && (
-                <input 
-                  type="text" placeholder="Country Name (e.g. Singapore)"
-                  value={newGeoForm.countryName}
-                  onChange={(e) => setNewGeoForm({ ...newGeoForm, countryName: e.target.value })}
-                  style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-                />
-              )}
-              {newGeoForm.type === 'STATE' && (
-                <input 
-                  type="text" placeholder="State Name (e.g. Kerala)"
-                  value={newGeoForm.stateName}
-                  onChange={(e) => setNewGeoForm({ ...newGeoForm, stateName: e.target.value })}
-                  style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-                />
-              )}
-              {newGeoForm.type === 'ZONE' && (
-                <input 
-                  type="text" placeholder="Zone Name (e.g. Zone 4 - Coimbatore)"
-                  value={newGeoForm.zoneName}
-                  onChange={(e) => setNewGeoForm({ ...newGeoForm, zoneName: e.target.value })}
-                  style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-                />
-              )}
-              {newGeoForm.type === 'DISTRICT' && (
-                <input 
-                  type="text" placeholder="District Name (e.g. Paramakudi)"
-                  value={newGeoForm.districtName}
-                  onChange={(e) => setNewGeoForm({ ...newGeoForm, districtName: e.target.value })}
-                  style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-                />
-              )}
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                <button type="button" onClick={() => setShowCreateGeoModal(false)} style={{ background: '#1f2937', color: '#cbd5e1', padding: '8px 14px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ background: '#2563eb', color: '#fff', padding: '8px 16px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Add Geography</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: CREATE DOWNGRADE USER */}
-      {showCreateUserModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
-          <div style={{ background: '#111c44', border: '1px solid #1e295d', borderRadius: 14, width: '100%', maxWidth: 460, padding: 28 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Create Downgrade User</h3>
-            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>You can only create roles below your level ({currentUser.role}).</p>
-
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (!newUserForm.fullName || !newUserForm.username) return;
-              const hierarchyMap = { 'ADMIN': 2, 'ZONAL_MANAGER': 3, 'SHOP_OWNER': 4, 'INDEPENDENT_OWNER': 4, 'STYLIST': 5 };
-              const level = hierarchyMap[newUserForm.role] || 4;
-              const u = {
-                username: newUserForm.username.toLowerCase(),
-                label: `${newUserForm.fullName} (${newUserForm.role})`,
-                role: newUserForm.role,
-                type: newUserForm.role === 'STYLIST' ? 'STYLIST' : (newUserForm.role.includes('OWNER') ? 'OWNER' : 'MANAGEMENT'),
-                name: newUserForm.fullName,
-                jurisdiction: newUserForm.territoryZone,
-                hierarchyLevel: level
-              };
-              setUsersList([...usersList, u]);
-              setShowCreateUserModal(false);
-              showToast(`User "${u.name}" provisioned as Level ${u.hierarchyLevel}!`);
-            }} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input 
-                type="text" placeholder="Full Name"
-                value={newUserForm.fullName}
-                onChange={(e) => setNewUserForm({ ...newUserForm, fullName: e.target.value })}
-                style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-              />
-              <input 
-                type="text" placeholder="Username"
-                value={newUserForm.username}
-                onChange={(e) => setNewUserForm({ ...newUserForm, username: e.target.value })}
-                style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-              />
-              <select 
-                value={newUserForm.role}
-                onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
-                style={{ padding: '8px 10px', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: '#fff', fontSize: 12 }}
-              >
-                {currentUser.hierarchyLevel === 1 && <option value="ADMIN">State Admin (Level 2)</option>}
-                {currentUser.hierarchyLevel <= 2 && <option value="ZONAL_MANAGER">Zonal Manager (Level 3)</option>}
-                {currentUser.hierarchyLevel <= 3 && (
-                  <>
-                    <option value="SHOP_OWNER">Salon Shop Owner (Level 4)</option>
-                    <option value="INDEPENDENT_OWNER">Independent Owner (Level 4)</option>
-                  </>
-                )}
-                <option value="STYLIST">Stylist / Barber (Level 5)</option>
-              </select>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                <button type="button" onClick={() => setShowCreateUserModal(false)} style={{ background: '#1f2937', color: '#cbd5e1', padding: '8px 14px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ background: '#8b5cf6', color: '#fff', padding: '8px 16px', borderRadius: 6, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Provision User</button>
-              </div>
-            </form>
           </div>
         </div>
       )}

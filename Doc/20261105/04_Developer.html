@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Developer Guide</title>
+  <style>
+    :root {
+      --primary: #7c3aed; --primary-light: #f5f3ff; --primary-dark: #5b21b6;
+      --text: #0f172a; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text); background: var(--bg); margin: 0; padding: 30px 15px; }
+    .container { max-width: 1200px; margin: 0 auto; background: var(--card); padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
+    h2 { color: var(--primary-dark); font-size: 20px; margin-top: 32px; border-left: 4px solid var(--primary); padding-left: 10px; }
+    h3 { color: #1e293b; font-size: 16px; margin-top: 20px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; font-family: Consolas, monospace; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 5px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th { background: #f1f5f9; color: #334155; text-align: left; padding: 10px; border: 1px solid var(--border); }
+    td { padding: 10px; border: 1px solid var(--border); }
+    .card { background: var(--primary-light); border: 1px solid #ddd6fe; border-radius: 8px; padding: 18px; margin-bottom: 18px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - Developer Manual & Engineering Guide v2.0</h1>
+    <p>Local Environment Setup, Project Structure, Debugging Microservices & Database Workflow</p>
+
+    <h2>1. Development Prerequisites</h2>
+    <ul>
+      <li><strong>.NET 8.0 SDK:</strong> <code>dotnet --version</code> (8.0.x or higher)</li>
+      <li><strong>Node.js:</strong> v18.17.0 LTS or v20.x</li>
+      <li><strong>PostgreSQL:</strong> v15 or v16 (running locally on port 5432, database: <code>stylebook_db</code>)</li>
+      <li><strong>Docker & Docker Compose:</strong> (Optional for containerized mode)</li>
+      <li><strong>IDE:</strong> Visual Studio 2022 (v17.8+) or Visual Studio Code with C# DevKit & React extensions</li>
+    </ul>
+
+    <h2>2. Solution Configuration & Port Registry</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Application / Service</th>
+          <th>Directory</th>
+          <th>Protocol / Port</th>
+          <th>Swagger / Entrypoint</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>PostgreSQL Database</strong></td>
+          <td><code>database/init.sql</code></td>
+          <td>TCP 5432</td>
+          <td>Database: <code>stylebook_db</code>, User: <code>postgres</code></td>
+        </tr>
+        <tr>
+          <td><strong>StyleBook.ApiGateway</strong></td>
+          <td><code>src/Gateway/StyleBook.ApiGateway</code></td>
+          <td>HTTP 5000</td>
+          <td>Unified Gateway Endpoint</td>
+        </tr>
+        <tr>
+          <td><strong>StyleBook.MasterData.Api</strong></td>
+          <td><code>src/Services/MasterData</code></td>
+          <td>HTTP 5001</td>
+          <td><code>http://localhost:5001/swagger</code></td>
+        </tr>
+        <tr>
+          <td><strong>StyleBook.Identity.Api</strong></td>
+          <td><code>src/Services/Identity</code></td>
+          <td>HTTP 5002</td>
+          <td><code>http://localhost:5002/swagger</code></td>
+        </tr>
+        <tr>
+          <td><strong>StyleBook.Salon.Api</strong></td>
+          <td><code>src/Services/Salon</code></td>
+          <td>HTTP 5003</td>
+          <td><code>http://localhost:5003/swagger</code></td>
+        </tr>
+        <tr>
+          <td><strong>StyleBook.Booking.Api</strong></td>
+          <td><code>src/Services/Booking</code></td>
+          <td>HTTP 5004</td>
+          <td><code>http://localhost:5004/swagger</code></td>
+        </tr>
+        <tr>
+          <td><strong>StyleBook.Marketing.Api</strong></td>
+          <td><code>src/Services/Marketing</code></td>
+          <td>HTTP 5005</td>
+          <td><code>http://localhost:5005/swagger</code></td>
+        </tr>
+        <tr>
+          <td><strong>StyleBook.Billing.Api</strong></td>
+          <td><code>src/Services/Billing</code></td>
+          <td>HTTP 5006</td>
+          <td><code>http://localhost:5006/swagger</code></td>
+        </tr>
+        <tr>
+          <td><strong>Management React Web</strong></td>
+          <td><code>src/Web/stylebook-management</code></td>
+          <td>HTTP 3000</td>
+          <td><code>http://localhost:3000</code></td>
+        </tr>
+        <tr>
+          <td><strong>Customer Next.js Web</strong></td>
+          <td><code>src/Web/stylebook-customer</code></td>
+          <td>HTTP 3001</td>
+          <td><code>http://localhost:3001</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Local Orchestration Scripts</h2>
+    <div class="card">
+      <p>The project provides automated scripts to start and stop all microservices and web apps simultaneously:</p>
+      <h3>Start All Services:</h3>
+      <pre><code>C:\Users\ayesh\Desktop\Mahathir\Projects\StyleBook\run-all.bat</code></pre>
+      <p>This script checks prerequisites, verifies PostgreSQL connectivity, launches each .NET microservice in a dedicated process window, and starts both Vite and Next.js frontend dev servers.</p>
+
+      <h3>Stop All Services:</h3>
+      <pre><code>C:\Users\ayesh\Desktop\Mahathir\Projects\StyleBook\stop-all.bat</code></pre>
+      <p>Gracefully terminates all background dotnet processes, node workers, and frees ports 5000-5006, 3000, and 3001.</p>
+    </div>
+
+    <h2>4. How to Debug an Individual Microservice</h2>
+    <p>If you need to set breakpoints in a single service (e.g., <code>StyleBook.Booking.Api</code>):</p>
+    <ol>
+      <li>Open terminal in the project root:
+        <pre><code>cd src\Services\Booking\StyleBook.Booking.Api
+dotnet run --launch-profile "http"</code></pre>
+      </li>
+      <li>Attach the Visual Studio or VS Code debugger to the running process.</li>
+      <li>Send requests through the API Gateway on port 5000 or directly on port 5004 to inspect EF Core execution and slot calculation variables.</li>
+    </ol>
+
+    <h2>5. Adding a New Database Entity or Migration</h2>
+    <ol>
+      <li>Create the entity class inside <code>src\BuildingBlocks\StyleBook.Shared\Domain\Entities\</code>.</li>
+      <li>Register the <code>DbSet&lt;T&gt;</code> inside <code>StyleBookDbContext.cs</code>.</li>
+      <li>Configure any relational mappings (keys, foreign keys, decimal precision) in <code>OnModelCreating</code>.</li>
+      <li>Add the corresponding table DDL inside <code>database\init.sql</code>.</li>
+      <li>Inject <code>IRepository&lt;T&gt;</code> into your Minimal API endpoints or Controllers to perform queries.</li>
+    </ol>
+  </div>
+</body>
+</html>

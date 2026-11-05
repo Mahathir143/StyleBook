@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleBook - Operational Workflows & State Machines</title>
+  <style>
+    :root {
+      --primary: #7c3aed; --primary-light: #f5f3ff; --primary-dark: #5b21b6;
+      --secondary: #0d9488; --text: #0f172a; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text); background: var(--bg); margin: 0; padding: 30px 15px; }
+    .container { max-width: 1200px; margin: 0 auto; background: var(--card); padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+    h1 { color: #0f172a; font-size: 28px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
+    h2 { color: var(--primary-dark); font-size: 20px; margin-top: 32px; border-left: 4px solid var(--primary); padding-left: 10px; }
+    h3 { color: #1e293b; font-size: 16px; margin-top: 20px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; font-family: Consolas, monospace; }
+    code { background: #f1f5f9; color: #0f172a; padding: 2px 5px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th { background: #f1f5f9; color: #334155; text-align: left; padding: 10px; border: 1px solid var(--border); }
+    td { padding: 10px; border: 1px solid var(--border); }
+    .wf-card { background: #fdf4ff; border: 1px solid #f0abfc; border-radius: 8px; padding: 18px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>StyleBook - Operational Workflows & State Machines v2.0</h1>
+    <p>Complete End-to-End Business State Transitions, Approval Gates, Logistics & Settlement Flows</p>
+
+    <h2>1. Salon Owner Onboarding & Approval State Machine</h2>
+    <div class="wf-card">
+      <pre><code>[Owner Self-Registers / Created by Admin]
+               &darr;
+       Status: DRAFT
+               &darr; Uploads Trade License, GSTIN, PAN, Bank Details & POC Info
+  Status: PENDING_APPROVAL
+               &darr;
+  [Zonal Operations Manager Verification Queue]
+     &bull; Verifies premises photo & sanitation audit
+     &bull; Confirms territorial jurisdiction (State &rarr; Zone &rarr; District)
+          &swarr;                                 &searr;
+[REJECTED with Feedback]               [APPROVED]
+(Owner edits & re-submits)                  &darr;
+                                [Selects SaaS Membership Plan]
+                                            &darr;
+                               Status: LIVE_ON_MARKETPLACE</code></pre>
+    </div>
+
+    <h2>2. Branch Creation & Custom Pricing Approval Workflow</h2>
+    <div class="wf-card">
+      <p>To preserve marketplace quality and prevent predatory pricing or bogus branch listings, changes adhere to a strict audit loop:</p>
+      <ol>
+        <li>Owner creates a new physical branch or enables Doorstep delivery in a new district.</li>
+        <li>Owner maps services from Master Catalog and sets custom prices:
+          <br><code>Validation: Custom Price &ge; Regional Minimum Floor Price</code>
+        </li>
+        <li>Branch status remains <code>PENDING_INSPECTION</code> and does not appear on customer search.</li>
+        <li>Zonal Manager inspects the location via digital map verification or field audit.</li>
+        <li>Upon approval, the branch and pricing matrix immediately synchronize across search caches.</li>
+      </ol>
+    </div>
+
+    <h2>3. Customer Booking & 8-Minute Cart Lock Workflow</h2>
+    <div class="wf-card">
+      <pre><code>[Customer Selects Date, Stylist & Services]
+                   &darr;
+   [Cart Engine Computes Total Duration]
+                   &darr;
+  [Slot Engine Checks Working Hours & Bookings]
+                   &darr;
+     [Customer Enters Checkout Screen]
+                   &darr;
+  [REDIS / DB ATOMIC LOCK ACQUIRED (8 Minutes)]
+  &bull; Slot temporarily marked 'HELD' for all other users
+          &swarr;                             &searr;
+[Payment Success / Cash Confirmed]     [8-Min Timer Expires]
+          &darr;                                   &darr;
+ Booking Confirmed (OTP Generated)       Slot Released to Public Pool</code></pre>
+    </div>
+
+    <h2>4. Doorstep Logistics & Commute Buffer Algorithm</h2>
+    <div class="wf-card">
+      <p>For home salon and bridal bookings (e.g., in coastal Puduvalasai or Panaikulam):</p>
+      <ul>
+        <li><strong>Coverage Radius Check:</strong> Customer delivery GPS coordinates must be &le; Stylist's <code>doorstep_radius_km</code> from the branch origin.</li>
+        <li><strong>Mandatory Commute Buffer:</strong> The system automatically blocks a <strong>30-minute travel buffer</strong> before and after the service duration to prevent stylist arrival delays.</li>
+        <li><strong>Live ETA Tracking:</strong> Stylist triggers "On the Way" in mobile app &rarr; Customer receives real-time tracking link with live map and estimated arrival time.</li>
+      </ul>
+    </div>
+
+    <h2>5. Appointment Completion & Fraud-Proof Check-In</h2>
+    <div class="wf-card">
+      <pre><code>Customer Arrives at Salon (or Stylist reaches Doorstep)
+                     &darr;
+Customer provides 6-Digit Arrival OTP
+                     &darr;
+Stylist inputs OTP in Management Mobile App ("Verify & Start")
+                     &darr;
+Status transitions to 'IN_PROGRESS' (Service Timer Starts)
+                     &darr;
+Service Completed &rarr; Stylist clicks "Complete Appointment"
+                     &darr;
+[AUTOMATIC LEDGER EXECUTION]
+&bull; If Online: Escrow releases funds to Owner Ledger (Net = Gross - Comm - GST).
+&bull; If Cash: Platform automatically debits (Comm + GST) from Owner Prepaid Wallet.
+                     &darr;
+Customer receives Push Notification: "Review your Salon & Stylist"</code></pre>
+    </div>
+
+    <h2>6. Rescheduling & Tiered Cancellation Workflow</h2>
+    <div class="wf-card">
+      <p>Customers can self-service manage bookings directly from the app:</p>
+      <ul>
+        <li><strong>Rescheduling:</strong> Permitted up to 2 hours prior to slot start time (max 2 reschedules within 14 calendar days). The engine automatically releases the old slot and re-locks the new slot.</li>
+        <li><strong>Cancellation & Refund Rules:</strong>
+          <br>&bull; <em>&gt; 12 Hours:</em> 100% full instant refund to payment method / wallet.
+          <br>&bull; <em>4–12 Hours:</em> 80% refund (20% fee; 15% credited to Salon Owner to compensate reserved slot).
+          <br>&bull; <em>1–4 Hours:</em> 50% refund (50% fee; 40% credited to Salon Owner).
+          <br>&bull; <em>&lt; 1 Hour / No-Show:</em> 0% refund (85% paid to Salon to protect barber wages, 15% platform commission).
+        </li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
