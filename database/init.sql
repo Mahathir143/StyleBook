@@ -683,8 +683,8 @@ ON CONFLICT (id) DO NOTHING;
 -- Seed Subscriptions for Existing Salons
 INSERT INTO billing.owner_subscriptions (id, salon_id, plan_id, billing_cycle, amount_paid, tax_amount, status, start_date, end_date, next_billing_date)
 VALUES
-('s1111111-1111-1111-1111-111111111111', 'aaaa1111-aaaa-1111-aaaa-111111111111', 2, 'MONTHLY', 2499.00, 449.82, 'ACTIVE', NOW() - INTERVAL '10 days', NOW() + INTERVAL '20 days', NOW() + INTERVAL '20 days'),
-('s2222222-2222-2222-2222-222222222222', 'bbbb2222-bbbb-2222-bbbb-222222222222', 1, 'MONTHLY', 799.00, 143.82, 'ACTIVE', NOW() - INTERVAL '5 days', NOW() + INTERVAL '25 days', NOW() + INTERVAL '25 days')
+('fa111111-1111-1111-1111-111111111111', 'aaaa1111-aaaa-1111-aaaa-111111111111', 2, 'MONTHLY', 2499.00, 449.82, 'ACTIVE', NOW() - INTERVAL '10 days', NOW() + INTERVAL '20 days', NOW() + INTERVAL '20 days'),
+('fa222222-2222-2222-2222-222222222222', 'bbbb2222-bbbb-2222-bbbb-222222222222', 1, 'MONTHLY', 799.00, 143.82, 'ACTIVE', NOW() - INTERVAL '5 days', NOW() + INTERVAL '25 days', NOW() + INTERVAL '25 days')
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed Wallets for Existing Salons
