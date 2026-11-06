@@ -880,8 +880,8 @@ export default function CustomerLandingPage() {
             {!isLoggedIn ? (
               // GUEST VIEW: Sign In / Register Button
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 12, color: '#64748b', background: '#f1f5f9', padding: '4px 10px', borderRadius: 12, fontWeight: 600 }}>
-                  👤 Guest Mode
+                <span className="cust-guest-badge" style={{ fontSize: 12, color: '#64748b', background: '#f1f5f9', padding: '4px 8px', borderRadius: 12, fontWeight: 600 }}>
+                  👤 Guest
                 </span>
                 <button 
                   onClick={() => { setAuthReason('Sign in to access appointment booking, coupons, ratings, and customer history.'); setShowAuthModal(true); }}
@@ -1206,7 +1206,7 @@ export default function CustomerLandingPage() {
           {/* PROMOTIONAL COUPONS BANNER */}
           <section style={{ maxWidth: 1240, margin: '20px auto', padding: '0 24px' }}>
             <div className="cust-cards-grid">
-              <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 12, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 12, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                 <div>
                   <span style={{ background: '#b45309', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 800 }}>DISTRICT PROMO</span>
                   <h4 style={{ fontSize: 15, fontWeight: 800, marginTop: 4 }}>Flat ₹50 OFF across Ramanathapuram</h4>
@@ -1220,7 +1220,7 @@ export default function CustomerLandingPage() {
                 </button>
               </div>
 
-              <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 12, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 12, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                 <div>
                   <span style={{ background: '#059669', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 800 }}>DOORSTEP GLOW</span>
                   <h4 style={{ fontSize: 15, fontWeight: 800, marginTop: 4 }}>15% OFF on Doorstep Makeovers</h4>
@@ -1243,7 +1243,7 @@ export default function CustomerLandingPage() {
             
             {/* 1. TOP-RATED BRANCHES (ENTRY POINT 1: CHOOSE A BRANCH) */}
             <section>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
                 <div>
                   <span style={{ fontSize: 11, fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5 }}>Entry Point 1</span>
                   <h2 style={{ fontSize: 22, fontWeight: 900, marginTop: 2 }}>🏢 Top-Rated Salon Branches</h2>
@@ -1256,7 +1256,7 @@ export default function CustomerLandingPage() {
                 {filteredSalons.flatMap(s => s.branches).map(branch => (
                   <div 
                     key={branch.id}
-                    style={{ minWidth: 320, maxWidth: 320, background: '#ffffff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', scrollSnapAlign: 'start', display: 'flex', flexDirection: 'column' }}
+                    style={{ minWidth: 'min(82vw, 300px)', maxWidth: 'min(82vw, 300px)', background: '#ffffff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', scrollSnapAlign: 'start', display: 'flex', flexDirection: 'column' }}
                   >
                     <div style={{ height: 150, position: 'relative' }}>
                       <img src={branch.image} alt={branch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1293,7 +1293,7 @@ export default function CustomerLandingPage() {
 
             {/* 2. TOP-RATED STYLISTS (ENTRY POINT 2: CHOOSE A STYLIST) */}
             <section>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
                 <div>
                   <span style={{ fontSize: 11, fontWeight: 800, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: 0.5 }}>Entry Point 2</span>
                   <h2 style={{ fontSize: 22, fontWeight: 900, marginTop: 2 }}>✂️ Top-Rated Stylists & Beauticians</h2>
@@ -1306,7 +1306,7 @@ export default function CustomerLandingPage() {
                 {filteredStylists.map(stylist => (
                   <div 
                     key={stylist.id}
-                    style={{ minWidth: 280, maxWidth: 280, background: '#ffffff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 18, boxShadow: '0 2px 10px rgba(0,0,0,0.04)', scrollSnapAlign: 'start', display: 'flex', flexDirection: 'column' }}
+                    style={{ minWidth: 'min(78vw, 280px)', maxWidth: 'min(78vw, 280px)', background: '#ffffff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 18, boxShadow: '0 2px 10px rgba(0,0,0,0.04)', scrollSnapAlign: 'start', display: 'flex', flexDirection: 'column' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                       <img src={stylist.avatar} alt={stylist.name} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid #7c3aed' }} />
@@ -1347,7 +1347,7 @@ export default function CustomerLandingPage() {
 
             {/* 3. POPULAR SERVICES CAROUSEL */}
             <section>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
                 <div>
                   <h2 style={{ fontSize: 22, fontWeight: 900 }}>🔥 Popular Services in Ramanathapuram</h2>
                   <p style={{ fontSize: 13, color: '#64748b' }}>Precision haircuts, herbal hair spa, bridal glow, and traditional shaves</p>
@@ -1359,7 +1359,7 @@ export default function CustomerLandingPage() {
                 {ALL_SERVICES_CATALOG.map(svc => (
                   <div 
                     key={svc.id}
-                    style={{ minWidth: 260, maxWidth: 260, background: '#ffffff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', scrollSnapAlign: 'start', display: 'flex', flexDirection: 'column' }}
+                    style={{ minWidth: 'min(75vw, 260px)', maxWidth: 'min(75vw, 260px)', background: '#ffffff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', scrollSnapAlign: 'start', display: 'flex', flexDirection: 'column' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ background: '#eff6ff', color: '#1e40af', padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 800 }}>
@@ -1399,7 +1399,7 @@ export default function CustomerLandingPage() {
 
             {/* 4. DOORSTEP SERVICE SPECIALISTS */}
             <section>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
                 <div>
                   <h2 style={{ fontSize: 22, fontWeight: 900 }}>🏡 Doorstep & Home Visit Specialists</h2>
                   <p style={{ fontSize: 13, color: '#64748b' }}>Certified beauticians delivering salon treatments to your home in Ramnad, Panaikulam & Puduvalasai</p>

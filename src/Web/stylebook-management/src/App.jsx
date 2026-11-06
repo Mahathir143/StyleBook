@@ -1685,7 +1685,7 @@ export default function App() {
             {activeTab === 'overview' && (
               <div>
                 {/* Notice Banner */}
-                <div style={{ background: 'linear-gradient(135deg, #1e1b4b, #172554)', border: '1px solid #3b82f6', borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: 'linear-gradient(135deg, #1e1b4b, #172554)', border: '1px solid #3b82f6', borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                   <div>
                     <h3 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 4px 0', color: '#fff' }}>
                       {currentUser.role === 'SUPER_ADMIN' ? 'Global Platform Command Dashboard' :
@@ -1706,7 +1706,7 @@ export default function App() {
                 </div>
 
                 {/* KPI METRIC CARDS */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 16, marginBottom: 28 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: 16, marginBottom: 28 }}>
                   {currentUser.type === 'MANAGEMENT' ? (
                     <>
                       <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, padding: 18 }}>
@@ -1792,7 +1792,7 @@ export default function App() {
                        'Financial Operations & Auditing Directory'}
                     </h3>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: 14 }}>
                       {currentUser.role === 'SUPER_ADMIN' && (
                         <>
                           <button 
@@ -2028,7 +2028,7 @@ export default function App() {
                 {/* SHOP OWNER & INDEPENDENT OWNER DASHBOARD: PENDING CONFIRMATION LIST ONLY (DESCENDING) */}
                 {(currentUser.role === 'SHOP_OWNER' || currentUser.role === 'INDEPENDENT_OWNER') && (
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
                       <h3 style={{ fontSize: 16, fontWeight: 800, color: '#fff', margin: 0 }}>
                         ⏳ Booking & Check-in: Pending Confirmation Requests (Descending Order)
                       </h3>
@@ -2095,7 +2095,7 @@ export default function App() {
             {/* ======================================================== */}
             {activeTab === 'approvals' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff' }}>Pending Entity Approvals Queue</h3>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
@@ -2112,7 +2112,7 @@ export default function App() {
                   
                   {/* Pending Salons */}
                   {salons.filter(s => s.approvalStatus === 'Pending_Approval').map(salon => (
-                    <div key={salon.id} style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 12, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div key={salon.id} style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 12, padding: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                           <span style={{ background: '#3b82f6', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 6 }}>NEW SALON APPLICATION</span>
@@ -2220,7 +2220,7 @@ export default function App() {
             {/* ======================================================== */}
             {activeTab === 'pricing' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff' }}>Services & Pricing Catalog</h3>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
@@ -2320,7 +2320,7 @@ export default function App() {
             {/* ======================================================== */}
             {activeTab === 'branches' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff' }}>Salon Branches Directory</h3>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
@@ -2338,7 +2338,7 @@ export default function App() {
                 </div>
 
                 {/* Search & Filter Bar */}
-                <div style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
                   <div style={{ flex: 1, position: 'relative' }}>
                     <Search size={16} color="#64748b" style={{ position: 'absolute', top: 11, left: 12 }} />
                     <input 
@@ -2361,7 +2361,7 @@ export default function App() {
                 </div>
 
                 {/* Branches Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 16 }}>
                   {salons
                     .filter(s => currentUser.type === 'MANAGEMENT' ? true : s.id === currentUser.salonId)
                     .flatMap(s => s.branches.map(b => ({ ...b, salonBrand: s.brandName })))
@@ -2427,7 +2427,7 @@ export default function App() {
             {/* ======================================================== */}
             {activeTab === 'stylists' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff' }}>Stylists & Shift Roster</h3>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
@@ -2476,7 +2476,7 @@ export default function App() {
                 </div>
 
                 {/* Stylist Cards Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 16 }}>
                   {stylists
                     .filter(st => currentUser.type === 'MANAGEMENT' ? true : st.salonId === currentUser.salonId)
                     .filter(st => {
@@ -2567,7 +2567,7 @@ export default function App() {
             {/* ======================================================== */}
             {activeTab === 'bookings' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff' }}>Bookings & Check-in Workflow</h3>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
@@ -2702,7 +2702,7 @@ export default function App() {
             {/* ======================================================== */}
             {activeTab === 'wallet' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff' }}>Wallets & Financial Escrow</h3>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
@@ -2882,7 +2882,7 @@ export default function App() {
             {/* ======================================================== */}
             {activeTab === 'reports' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff' }}>Financial Reports & Statements</h3>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
@@ -2891,7 +2891,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 16 }}>
                   
                   {/* Report 1 */}
                   <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, padding: 22 }}>
@@ -2965,7 +2965,7 @@ export default function App() {
             {/* ======================================================== */}
             {activeTab === 'governance' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff' }}>Governance, Compliance & Targeted Notices</h3>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
@@ -3066,7 +3066,7 @@ export default function App() {
             {/* ======================================================== */}
             {activeTab === 'masters' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff' }}>Country, State & District Masters</h3>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
@@ -3258,7 +3258,7 @@ export default function App() {
                   </p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 16 }}>
                   
                   {/* Super Admin */}
                   <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, padding: 20 }}>
@@ -3335,7 +3335,7 @@ export default function App() {
             {/* ======================================================== */}
             {activeTab === 'users' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff' }}>User Directory & Creation Menu</h3>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
@@ -3459,7 +3459,7 @@ export default function App() {
                   </p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 16 }}>
                   
                   {/* Admin POV: Super Admin Contact */}
                   {currentUser.role === 'ADMIN' && (

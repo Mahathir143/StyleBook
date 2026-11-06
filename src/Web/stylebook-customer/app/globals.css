@@ -240,3 +240,10 @@ input, select, textarea {
     min-height: 44px;
   }
 }
+
+
+@media (max-width: 640px) {
+  .cust-guest-badge {
+    display: none !important;
+  }
+}
