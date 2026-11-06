@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  ShieldCheck, Store, Scissors, Calendar, Tag, Bell, CheckCircle2, 
+  Menu, X, ShieldCheck, Store, Scissors, Calendar, Tag, Bell, CheckCircle2, 
   XCircle, Clock, MapPin, UserCheck, Phone, DollarSign, LogOut, 
   ArrowRight, Sparkles, AlertCircle, RefreshCw, Smartphone, Key, Plus, Lock, User,
   FileText, AlertTriangle, Users, Building, Send, Check, ShieldAlert, Globe, ArrowLeftRight, HelpCircle, Mail,
@@ -124,6 +124,7 @@ export default function App() {
   const [notificationMsg, setNotificationMsg] = useState(null);
 
   // Confirmation Modal for Approvals
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [confirmApprovalModal, setConfirmApprovalModal] = useState(null); // { item, action: 'APPROVE' | 'REJECT', reason: '' }
 
   // Modal States
@@ -855,7 +856,7 @@ export default function App() {
       };
       setCurrentUser(superAdminUser);
       setIsAuthenticated(true);
-      setActiveTab('overview');
+      setActiveTab('overview'); setMobileMenuOpen(false);
       showToast('Logged in as Super Admin (Global Scope)');
       return;
     }
@@ -876,7 +877,7 @@ export default function App() {
         hierarchyLevel: dbUser.role === 'ADMIN' ? 2 : dbUser.role === 'SHOP_OWNER' ? 4 : 3 
       });
       setIsAuthenticated(true);
-      setActiveTab('overview');
+      setActiveTab('overview'); setMobileMenuOpen(false);
       showToast(`Welcome back, ${dbUser.fullName || dbUser.username} (${dbUser.role})!`);
       return;
     }
@@ -886,7 +887,7 @@ export default function App() {
     if (preset) {
       setCurrentUser(preset);
       setIsAuthenticated(true);
-      setActiveTab('overview');
+      setActiveTab('overview'); setMobileMenuOpen(false);
       showToast(`Logged in as ${preset.name} (${preset.role})`);
       return;
     }
@@ -897,7 +898,7 @@ export default function App() {
   const handleSelectPresetUser = (user) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
-    setActiveTab('overview');
+    setActiveTab('overview'); setMobileMenuOpen(false);
     showToast(`Switched to ${user.name} (${user.role})`);
   };
 
@@ -905,7 +906,7 @@ export default function App() {
     setIsAuthenticated(false);
     setCurrentUser(null);
     setLoginForm({ username: '', password: '' });
-    setActiveTab('overview');
+    setActiveTab('overview'); setMobileMenuOpen(false);
   };
 
   // Helper: Approval Confirmation
@@ -1423,20 +1424,28 @@ export default function App() {
         // ========================================================
         // AUTHENTICATED DASHBOARD LAYOUT
         // ========================================================
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
           
+          {/* Mobile Backdrop */}
+          <div className={"sb-backdrop" + (mobileMenuOpen ? " open" : "")} onClick={() => setMobileMenuOpen(false)} />
+
           {/* SIDEBAR NAVIGATION */}
-          <div style={{ width: 260, background: '#0b1120', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column' }}>
+          <aside className={"sb-sidebar" + (mobileMenuOpen ? " open" : "")}>
             
             {/* Header */}
-            <div style={{ padding: '20px 16px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ padding: 8, background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', borderRadius: 8 }}>
-                <Scissors size={20} color="#fff" />
+            <div style={{ padding: '16px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ padding: 8, background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', borderRadius: 8 }}>
+                  <Scissors size={20} color="#fff" />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>StyleBook</h2>
+                  <p style={{ fontSize: 10, color: '#94a3b8', margin: 0, fontWeight: 700 }}>MANAGEMENT CONSOLE</p>
+                </div>
               </div>
-              <div>
-                <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>StyleBook</h2>
-                <p style={{ fontSize: 10, color: '#94a3b8', margin: 0, fontWeight: 700 }}>MANAGEMENT CONSOLE</p>
-              </div>
+              <button className="sb-close-sidebar" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
+                <X size={18} />
+              </button>
             </div>
 
             {/* Current User Badge */}
@@ -1460,7 +1469,7 @@ export default function App() {
               
               {/* Overview */}
               <button 
-                onClick={() => setActiveTab('overview')}
+                onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'overview' ? '#7c3aed' : 'transparent', color: activeTab === 'overview' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
               >
                 <Store size={16} /> Dashboard
@@ -1469,7 +1478,7 @@ export default function App() {
               {/* Approvals (Super Admin, Admin, Zonal Manager) */}
               {currentUser.hierarchyLevel <= 3 && currentUser.role !== 'FINANCE' && (
                 <button 
-                  onClick={() => setActiveTab('approvals')}
+                  onClick={() => { setActiveTab('approvals'); setMobileMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'approvals' ? '#7c3aed' : 'transparent', color: activeTab === 'approvals' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1486,7 +1495,7 @@ export default function App() {
               {/* Services & Pricing (Management & Owners) */}
               {currentUser.role !== 'STYLIST' && currentUser.role !== 'FINANCE' && (
                 <button 
-                  onClick={() => setActiveTab('pricing')}
+                  onClick={() => { setActiveTab('pricing'); setMobileMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'pricing' ? '#7c3aed' : 'transparent', color: activeTab === 'pricing' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <Tag size={16} /> Services & Pricing
@@ -1496,7 +1505,7 @@ export default function App() {
               {/* Branches (Management & Shop Owners) */}
               {currentUser.role !== 'STYLIST' && currentUser.role !== 'FINANCE' && (
                 <button 
-                  onClick={() => setActiveTab('branches')}
+                  onClick={() => { setActiveTab('branches'); setMobileMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'branches' ? '#7c3aed' : 'transparent', color: activeTab === 'branches' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <Building size={16} /> Branches
@@ -1506,7 +1515,7 @@ export default function App() {
               {/* Stylists & Skills */}
               {currentUser.role !== 'FINANCE' && (
                 <button 
-                  onClick={() => setActiveTab('stylists')}
+                  onClick={() => { setActiveTab('stylists'); setMobileMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'stylists' ? '#7c3aed' : 'transparent', color: activeTab === 'stylists' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <Scissors size={16} /> Stylists & Skills
@@ -1515,7 +1524,7 @@ export default function App() {
 
               {/* Bookings & Check-in */}
               <button 
-                onClick={() => setActiveTab('bookings')}
+                onClick={() => { setActiveTab('bookings'); setMobileMenuOpen(false); }}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'bookings' ? '#7c3aed' : 'transparent', color: activeTab === 'bookings' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1528,7 +1537,7 @@ export default function App() {
 
               {/* Wallets & Financials */}
               <button 
-                onClick={() => setActiveTab('wallet')}
+                onClick={() => { setActiveTab('wallet'); setMobileMenuOpen(false); }}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'wallet' ? '#7c3aed' : 'transparent', color: activeTab === 'wallet' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
               >
                 <Wallet size={16} /> Wallets & Financials
@@ -1537,7 +1546,7 @@ export default function App() {
               {/* Financial Reports (Finance & Super Admin) */}
               {(currentUser.role === 'FINANCE' || currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN') && (
                 <button 
-                  onClick={() => setActiveTab('reports')}
+                  onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'reports' ? '#7c3aed' : 'transparent', color: activeTab === 'reports' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <FileSpreadsheet size={16} /> Financial Reports
@@ -1546,7 +1555,7 @@ export default function App() {
 
               {/* Governance & Compliance Notices */}
               <button 
-                onClick={() => setActiveTab('governance')}
+                onClick={() => { setActiveTab('governance'); setMobileMenuOpen(false); }}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'governance' ? '#7c3aed' : 'transparent', color: activeTab === 'governance' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1562,7 +1571,7 @@ export default function App() {
               {/* Country, State, District Masters (Super Admin & Admin only) */}
               {(currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN') && (
                 <button 
-                  onClick={() => setActiveTab('masters')}
+                  onClick={() => { setActiveTab('masters'); setMobileMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'masters' ? '#7c3aed' : 'transparent', color: activeTab === 'masters' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <Globe size={16} /> Master Geographies
@@ -1572,7 +1581,7 @@ export default function App() {
               {/* Role Matrix & Scope (Super Admin & Admin) */}
               {(currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN') && (
                 <button 
-                  onClick={() => setActiveTab('roles')}
+                  onClick={() => { setActiveTab('roles'); setMobileMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'roles' ? '#7c3aed' : 'transparent', color: activeTab === 'roles' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <ShieldAlert size={16} /> Roles & Scopes
@@ -1582,7 +1591,7 @@ export default function App() {
               {/* User Management Menu (Super Admin & Admin) */}
               {(currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN') && (
                 <button 
-                  onClick={() => setActiveTab('users')}
+                  onClick={() => { setActiveTab('users'); setMobileMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'users' ? '#7c3aed' : 'transparent', color: activeTab === 'users' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <Users size={16} /> User Management
@@ -1592,7 +1601,7 @@ export default function App() {
               {/* HelpDesk & POCs (HIDDEN FOR SUPER ADMIN!) */}
               {currentUser.role !== 'SUPER_ADMIN' && (
                 <button 
-                  onClick={() => setActiveTab('helpdesk')}
+                  onClick={() => { setActiveTab('helpdesk'); setMobileMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: activeTab === 'helpdesk' ? '#7c3aed' : 'transparent', color: activeTab === 'helpdesk' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <HelpCircle size={16} /> HelpDesk & POCs
@@ -1611,15 +1620,23 @@ export default function App() {
               </button>
             </div>
 
-          </div>
+          </aside>
 
           {/* MAIN CONTENT WORKSPACE */}
-          <div style={{ flex: 1, overflowY: 'auto', background: '#090d16', padding: 28 }}>
+          <div className="sb-workspace">
             
             {/* Top Bar with Context Title */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-              <div>
-                <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, textTransform: 'capitalize' }}>
+            <div className="sb-header-bar">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button 
+                  className="sb-hamburger" 
+                  onClick={() => setMobileMenuOpen(true)}
+                  aria-label="Open Navigation Menu"
+                >
+                  <Menu size={20} />
+                </button>
+                <div>
+                  <h1 style={{ fontSize: 'clamp(16px, 3.5vw, 22px)', fontWeight: 800, margin: 0, textTransform: 'capitalize' }}>
                   {activeTab === 'overview' ? 'Dashboard Overview' :
                    activeTab === 'approvals' ? 'Approvals & Review Queue' :
                    activeTab === 'pricing' ? 'Services & Pricing Configuration' :
@@ -1636,6 +1653,7 @@ export default function App() {
                 <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 0' }}>
                   Logged in as <strong style={{ color: '#fff' }}>{currentUser.name}</strong> • Jurisdiction: <span style={{ color: '#a78bfa' }}>{currentUser.jurisdiction || currentUser.salon || 'Allocated Scope'}</span>
                 </p>
+                </div>
               </div>
 
               {/* Dev Fast Switcher (only shown when enableOneClickDemo is true) */}
@@ -1778,7 +1796,7 @@ export default function App() {
                       {currentUser.role === 'SUPER_ADMIN' && (
                         <>
                           <button 
-                            onClick={() => setActiveTab('approvals')}
+                            onClick={() => { setActiveTab('approvals'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1794,7 +1812,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('masters')}
+                            onClick={() => { setActiveTab('masters'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Globe size={20} color="#38bdf8" />
@@ -1805,7 +1823,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('users')}
+                            onClick={() => { setActiveTab('users'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Users size={20} color="#10b981" />
@@ -1816,7 +1834,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('wallet')}
+                            onClick={() => { setActiveTab('wallet'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Wallet size={20} color="#f59e0b" />
@@ -1827,7 +1845,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('governance')}
+                            onClick={() => { setActiveTab('governance'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Bell size={20} color="#ec4899" />
@@ -1842,7 +1860,7 @@ export default function App() {
                       {currentUser.role === 'ADMIN' && (
                         <>
                           <button 
-                            onClick={() => setActiveTab('approvals')}
+                            onClick={() => { setActiveTab('approvals'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1858,7 +1876,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('branches')}
+                            onClick={() => { setActiveTab('branches'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Building size={20} color="#38bdf8" />
@@ -1869,7 +1887,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('stylists')}
+                            onClick={() => { setActiveTab('stylists'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Scissors size={20} color="#10b981" />
@@ -1880,7 +1898,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('wallet')}
+                            onClick={() => { setActiveTab('wallet'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Wallet size={20} color="#f59e0b" />
@@ -1891,7 +1909,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('governance')}
+                            onClick={() => { setActiveTab('governance'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Bell size={20} color="#ec4899" />
@@ -1906,7 +1924,7 @@ export default function App() {
                       {currentUser.role === 'ZONAL_MANAGER' && (
                         <>
                           <button 
-                            onClick={() => setActiveTab('approvals')}
+                            onClick={() => { setActiveTab('approvals'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1922,7 +1940,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('branches')}
+                            onClick={() => { setActiveTab('branches'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Building size={20} color="#38bdf8" />
@@ -1933,7 +1951,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('stylists')}
+                            onClick={() => { setActiveTab('stylists'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Scissors size={20} color="#10b981" />
@@ -1944,7 +1962,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('wallet')}
+                            onClick={() => { setActiveTab('wallet'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Wallet size={20} color="#f59e0b" />
@@ -1955,7 +1973,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('governance')}
+                            onClick={() => { setActiveTab('governance'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Bell size={20} color="#ec4899" />
@@ -1970,7 +1988,7 @@ export default function App() {
                       {currentUser.role === 'FINANCE' && (
                         <>
                           <button 
-                            onClick={() => setActiveTab('wallet')}
+                            onClick={() => { setActiveTab('wallet'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Wallet size={20} color="#10b981" />
@@ -1981,7 +1999,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('reports')}
+                            onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <FileSpreadsheet size={20} color="#38bdf8" />
@@ -1992,7 +2010,7 @@ export default function App() {
                           </button>
 
                           <button 
-                            onClick={() => setActiveTab('governance')}
+                            onClick={() => { setActiveTab('governance'); setMobileMenuOpen(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#fff', textAlign: 'left', cursor: 'pointer' }}
                           >
                             <Bell size={20} color="#f59e0b" />
@@ -2234,7 +2252,7 @@ export default function App() {
                 </div>
 
                 {/* Services Table */}
-                <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, overflow: 'hidden' }}>
+                <div className="sb-table-container">
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
                     <thead>
                       <tr style={{ background: '#111827', borderBottom: '1px solid #1e293b', color: '#94a3b8', fontSize: 11, textTransform: 'uppercase' }}>
@@ -2754,7 +2772,7 @@ export default function App() {
                     )}
 
                     {/* Wallets Table */}
-                    <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, overflow: 'hidden' }}>
+                    <div className="sb-table-container">
                       <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
                         <thead>
                           <tr style={{ background: '#111827', borderBottom: '1px solid #1e293b', color: '#94a3b8', fontSize: 11, textTransform: 'uppercase' }}>
@@ -2818,7 +2836,7 @@ export default function App() {
                 ) : (
                   <div>
                     {/* History SubTab Table */}
-                    <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, overflow: 'hidden' }}>
+                    <div className="sb-table-container">
                       <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
                         <thead>
                           <tr style={{ background: '#111827', borderBottom: '1px solid #1e293b', color: '#94a3b8', fontSize: 11, textTransform: 'uppercase' }}>
@@ -3107,7 +3125,7 @@ export default function App() {
                 </div>
 
                 {/* Tables */}
-                <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, overflow: 'hidden' }}>
+                <div className="sb-table-container">
                   {geoSubTab === 'countries' && (
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
                       <thead>
@@ -3362,7 +3380,7 @@ export default function App() {
                 </div>
 
                 {/* Users Table */}
-                <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, overflow: 'hidden' }}>
+                <div className="sb-table-container">
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
                     <thead>
                       <tr style={{ background: '#111827', borderBottom: '1px solid #1e293b', color: '#94a3b8', fontSize: 11, textTransform: 'uppercase' }}>

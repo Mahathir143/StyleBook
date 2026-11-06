@@ -3,7 +3,7 @@
 :root {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   color: #0f172a;
-  background-color: #f8fafc;
+  background-color: #090d16;
 }
 
 * {
@@ -14,7 +14,9 @@
 
 body {
   min-height: 100vh;
-  background: #f8fafc;
+  background: #090d16;
+  color: #f8fafc;
+  overflow-x: hidden;
 }
 
 button {
@@ -30,6 +32,23 @@ input, select, textarea {
   outline: none;
 }
 
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b1120;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Status Badges */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -49,31 +68,264 @@ input, select, textarea {
 .badge-completed { background: #d1fae5; color: #047857; }
 .badge-rejected { background: #fee2e2; color: #b91c1c; }
 
-.card {
-  background: white;
+/* ======================================================== */
+/* MULTI-DEVICE RESPONSIVE LAYOUT SYSTEM                   */
+/* ======================================================== */
+
+/* 1. App Container */
+.sb-app-root {
+  display: flex;
+  height: 100vh;
+  background: #090d16;
+  color: #f8fafc;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 2. Responsive Sidebar (Desktop Static / Mobile Off-Canvas Drawer) */
+.sb-sidebar {
+  width: 260px;
+  background: #0b1120;
+  border-right: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100vh;
+  z-index: 100;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sb-backdrop {
+  display: none;
+}
+
+.sb-close-sidebar {
+  display: none;
+}
+
+.sb-hamburger {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .sb-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85vw;
+    transform: translateX(-100%);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.7);
+  }
+
+  .sb-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sb-backdrop.open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 90;
+  }
+
+  .sb-close-sidebar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #94a3b8;
+    cursor: pointer;
+  }
+
+  .sb-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #f8fafc;
+    border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+/* 3. Main Workspace & Header */
+.sb-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.sb-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #0b1120;
+  border-bottom: 1px solid #1e293b;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .sb-header-bar {
+    padding: 12px 16px;
+  }
+}
+
+.sb-content-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+  background: #090d16;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .sb-content-area {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sb-content-area {
+    padding: 12px;
+  }
+}
+
+/* 4. Responsive Grid Utilities */
+.sb-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .sb-grid-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.sb-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .sb-grid-2col {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* 5. Responsive Data Table Containers */
+.sb-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #0f172a;
+  border: 1px solid #1e293b;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.btn-primary {
-  background: #2563eb;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-}
-.btn-primary:hover {
-  background: #1d4ed8;
+.sb-table-container table {
+  width: 100%;
+  min-width: 680px; /* Ensures columns stay readable without crushing */
+  border-collapse: collapse;
 }
 
-.btn-secondary {
-  background: #f1f5f9;
-  color: #334155;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
+@media (max-width: 640px) {
+  .sb-table-container table {
+    min-width: 620px;
+  }
 }
-.btn-secondary:hover {
-  background: #e2e8f0;
+
+/* 6. Responsive Modals */
+.sb-modal-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.sb-modal-box {
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  margin: auto;
+}
+
+@media (max-width: 640px) {
+  .sb-modal-box {
+    padding: 16px;
+    max-height: 92vh;
+    border-radius: 12px;
+  }
+}
+
+/* 7. Responsive Search & Filter Bars */
+.sb-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sb-filter-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex: 1 1 280px;
+}
+
+@media (max-width: 640px) {
+  .sb-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sb-filter-group {
+    width: 100%;
+  }
+}
+
+/* 8. Touch friendly tap targets */
+@media (max-width: 768px) {
+  button, input, select {
+    min-height: 42px;
+  }
+  .sb-sidebar button {
+    min-height: 44px;
+    padding: 11px 14px !important;
+  }
 }

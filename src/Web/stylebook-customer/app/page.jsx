@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { 
-  Search, MapPin, Scissors, Star, Calendar, Clock, ShieldCheck, 
+  Menu, Search, MapPin, Scissors, Star, Calendar, Clock, ShieldCheck, 
   Sparkles, CheckCircle2, ChevronRight, User, Heart, Tag, 
   Smartphone, Filter, X, ArrowRight, MessageSquare, ChevronDown, 
   FileText, History, HelpCircle, Phone, Info, LogOut, Lock, 
@@ -306,6 +306,7 @@ export default function CustomerLandingPage() {
   const [showMyBookings, setShowMyBookings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showReports, setShowReports] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [notificationMsg, setNotificationMsg] = useState(null);
 
   // Authentication State: Guest by default!
@@ -836,22 +837,22 @@ export default function CustomerLandingPage() {
 
       {/* 1. TOP MENU (Logo, Home, Contact Us, About Us, Login / Profile Dropdown) */}
       <header style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 1000 }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="cust-header-container">
           
           {/* Logo & Navigation Links */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setActiveNav('Home')}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => { setActiveNav('Home'); setMobileNavOpen(false); }}>
               <div style={{ width: 38, height: 38, borderRadius: 10, background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Scissors size={20} color="#fff" />
               </div>
               <div>
-                <span style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', letterSpacing: -0.5 }}>StyleBook</span>
+                <span style={{ fontSize: 'clamp(17px, 4vw, 20px)', fontWeight: 900, color: '#0f172a', letterSpacing: -0.5 }}>StyleBook</span>
                 <span style={{ display: 'block', fontSize: 10, color: '#2563eb', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>Tamil Nadu • Ramanathapuram</span>
               </div>
             </div>
 
-            {/* Top Menu Links */}
-            <nav style={{ display: 'flex', gap: 24, fontSize: 14, fontWeight: 700 }}>
+            {/* Desktop Top Menu Links */}
+            <nav className="cust-desktop-nav">
               <button 
                 onClick={() => setActiveNav('Home')}
                 style={{ background: 'transparent', color: activeNav === 'Home' ? '#2563eb' : '#475569', borderBottom: activeNav === 'Home' ? '2px solid #2563eb' : 'none', paddingBottom: 4, borderTop: 'none', borderLeft: 'none', borderRight: 'none', cursor: 'pointer' }}
@@ -954,6 +955,28 @@ export default function CustomerLandingPage() {
           </div>
 
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        <div className={"cust-mobile-drawer" + (mobileNavOpen ? " open" : "")}>
+          <button 
+            onClick={() => { setActiveNav('Home'); setMobileNavOpen(false); }}
+            style={{ background: activeNav === 'Home' ? '#eff6ff' : 'transparent', color: activeNav === 'Home' ? '#2563eb' : '#334155' }}
+          >
+            🏠 Home
+          </button>
+          <button 
+            onClick={() => { setActiveNav('ContactUs'); setMobileNavOpen(false); }}
+            style={{ background: activeNav === 'ContactUs' ? '#eff6ff' : 'transparent', color: activeNav === 'ContactUs' ? '#2563eb' : '#334155' }}
+          >
+            📞 Contact Us / POC Directory
+          </button>
+          <button 
+            onClick={() => { setActiveNav('AboutUs'); setMobileNavOpen(false); }}
+            style={{ background: activeNav === 'AboutUs' ? '#eff6ff' : 'transparent', color: activeNav === 'AboutUs' ? '#2563eb' : '#334155' }}
+          >
+            ℹ️ About Us & Coverage
+          </button>
+        </div>
       </header>
 
       {/* COMPLIANCE & NOTICES BANNER (Targeted for CUSTOMER / Public) */}
@@ -970,7 +993,7 @@ export default function CustomerLandingPage() {
             <p style={{ marginTop: 12, lineHeight: 1.7, color: '#475569' }}>
               StyleBook is Ramanathapuram's premier digital salon network and on-demand grooming platform. We empower physical salons, independent home beauticians, and doorstep stylists across <strong>Ramnad Town</strong>, <strong>Puduvalasai</strong>, <strong>Panaikulam</strong>, and <strong>Sakkarakottai</strong>.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 28 }}>
+            <div className="cust-grid-3col" style={{ marginTop: 28 }}>
               <div style={{ background: '#f8fafc', padding: 18, borderRadius: 10, border: '1px solid #e2e8f0' }}>
                 <h4 style={{ fontWeight: 800, color: '#2563eb' }}>Verified Local Salons</h4>
                 <p style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>All shops inspected and certified by regional zonal authorities.</p>
@@ -997,7 +1020,7 @@ export default function CustomerLandingPage() {
               Direct points of contact for Store Operations, Regional Administration, and Accounts across Ramanathapuram.
             </p>
             
-            <div style={{ marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            <div className="cust-grid-3col" style={{ marginTop: 28 }}>
               {/* Manager POC */}
               <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1048,12 +1071,12 @@ export default function CustomerLandingPage() {
       {activeNav === 'Home' && (
         <>
           {/* Hero Banner */}
-          <section style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%)', color: '#ffffff', padding: '48px 24px' }}>
+          <section className="cust-hero-section">
             <div style={{ maxWidth: 1240, margin: '0 auto', textAlign: 'center' }}>
               <span style={{ background: 'rgba(255,255,255,0.2)', padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 Tamil Nadu Salon & Doorstep Grooming Network
               </span>
-              <h1 style={{ fontSize: 36, fontWeight: 900, marginTop: 14, letterSpacing: -0.5 }}>
+              <h1 className="cust-hero-title">
                 Discover Verified Salons & Top Stylists in Ramanathapuram
               </h1>
               <p style={{ fontSize: 15, maxWidth: 720, margin: '12px auto 0', opacity: 0.9 }}>
@@ -1069,7 +1092,7 @@ export default function CustomerLandingPage() {
               )}
 
               {/* 1. SMART GLOBAL SEARCH BOX */}
-              <div style={{ maxWidth: 780, margin: '24px auto 0', background: '#ffffff', borderRadius: 14, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 8px 30px rgba(0,0,0,0.2)' }}>
+              <div className="cust-search-wrapper">
                 <Search size={22} color="#2563eb" />
                 <input 
                   type="text" 
@@ -1182,7 +1205,7 @@ export default function CustomerLandingPage() {
 
           {/* PROMOTIONAL COUPONS BANNER */}
           <section style={{ maxWidth: 1240, margin: '20px auto', padding: '0 24px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+            <div className="cust-cards-grid">
               <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 12, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <span style={{ background: '#b45309', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 800 }}>DISTRICT PROMO</span>
@@ -1383,7 +1406,7 @@ export default function CustomerLandingPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 18 }}>
+              <div className="cust-cards-grid">
                 {TAMILNADU_SALONS.filter(s => s.doorstepAvailable).map(salon => (
                   <div key={salon.id} style={{ background: '#ffffff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, display: 'flex', gap: 16 }}>
                     <img src={salon.image} alt={salon.name} style={{ width: 110, height: 110, borderRadius: 10, objectFit: 'cover' }} />
@@ -1441,7 +1464,7 @@ export default function CustomerLandingPage() {
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
+                <div className="cust-cards-grid">
                   {filteredSalons.map(salon => (
                     <div key={salon.id} style={{ background: '#ffffff', borderRadius: 12, overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                       
@@ -1530,7 +1553,7 @@ export default function CustomerLandingPage() {
       {/* 5. COMPREHENSIVE BOOKING MODAL (BRANCH OR STYLIST FIRST) */}
       {/* ======================================================== */}
       {bookingModalOpen && selectedSalon && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
+        <div className="cust-modal-backdrop">
           <div style={{ background: '#ffffff', borderRadius: 16, width: '100%', maxWidth: 640, maxHeight: '92vh', overflowY: 'auto', padding: 28, position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
             
             <button 
@@ -1863,7 +1886,7 @@ export default function CustomerLandingPage() {
       {/* 6. DUAL REVIEW & RATING SUBMISSION MODAL                 */}
       {/* ======================================================== */}
       {reviewModalOpen && activeBookingForReview && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20000, padding: 20 }}>
+        <div className="cust-modal-backdrop">
           <div style={{ background: '#ffffff', borderRadius: 16, width: '100%', maxWidth: 540, padding: 28, position: 'relative', boxShadow: '0 20px 40px rgba(0,0,0,0.25)' }}>
             
             <button 
@@ -1957,7 +1980,7 @@ export default function CustomerLandingPage() {
       {/* 7. CUSTOMER AUTHENTICATION MODAL (LOGIN GATE)            */}
       {/* ======================================================== */}
       {showAuthModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, padding: 20 }}>
+        <div className="cust-modal-backdrop">
           <div style={{ background: '#ffffff', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', padding: 28, position: 'relative', boxShadow: '0 20px 40px rgba(0,0,0,0.25)' }}>
             
             <button 
@@ -2127,7 +2150,7 @@ export default function CustomerLandingPage() {
       {/* 8. MY ACTIVE BOOKINGS MODAL                              */}
       {/* ======================================================== */}
       {showMyBookings && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
+        <div className="cust-modal-backdrop">
           <div style={{ background: '#ffffff', borderRadius: 16, width: '100%', maxWidth: 580, maxHeight: '90vh', overflowY: 'auto', padding: 28, position: 'relative' }}>
             <button 
               onClick={() => setShowMyBookings(false)}
@@ -2166,7 +2189,7 @@ export default function CustomerLandingPage() {
       {/* 9. MY HISTORY & REVIEWS MODAL                            */}
       {/* ======================================================== */}
       {showHistory && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
+        <div className="cust-modal-backdrop">
           <div style={{ background: '#ffffff', borderRadius: 16, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto', padding: 28, position: 'relative' }}>
             <button 
               onClick={() => setShowHistory(false)}
@@ -2223,7 +2246,7 @@ export default function CustomerLandingPage() {
       {/* 10. CUSTOMER REPORTS & INVOICES MODAL                    */}
       {/* ======================================================== */}
       {showReports && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 20 }}>
+        <div className="cust-modal-backdrop">
           <div style={{ background: '#ffffff', borderRadius: 16, width: '100%', maxWidth: 540, padding: 28, position: 'relative' }}>
             <button 
               onClick={() => setShowReports(false)}
